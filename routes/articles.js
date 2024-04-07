@@ -1,20 +1,117 @@
 const express = require('express');
 const axios = require('axios');
+const Sequelize = require('sequelize');
 const cheerio = require('cheerio');
-const { Article, Perspective } = require('../models');
+const { Article, Perspective, Vote } = require('../models');
 const router = express.Router();
 
 router.get('/get_latest', async (req, res) => {
     try {
-        const index = parseInt(req.query.index) || 0;
-        const article = await Article.findAll({
-            attributes: ['id', 'url', 'title', 'submitDate', 'scope', 'content', 'perspectiveId'], // Specify fields to return
-            order: [['submitDate', 'DESC']],
+        const index = parseInt(req.query.index) || 0; // For pagination, if needed
+        const limit = 27; // Always return 27 articles
+
+        const articles = await Article.findAll({
+            order: [['submitDate', 'DESC']], // Newest posts first
             offset: index,
-            limit: 27,
-            include: [{ model: Perspective }] // Include Perspective details if needed
+            limit: limit
         });
-        res.json(article[0] || {});
+        res.json(articles);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// POST route to upvote an article
+router.post('/upvote/:articleId', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { articleId } = req.params;
+
+        const article = await Article.findByPk(articleId);
+        const existingVote = await Vote.findOne({ where: { userId, articleId, is_article_vote: true } });
+
+        if (existingVote) {
+            if (existingVote.is_upvote) {
+                await existingVote.destroy();
+            } else {
+                existingVote.is_upvote = true;
+                await existingVote.save();
+            }
+        } else {
+            await Vote.create({ userId, articleId, is_upvote: true, is_article_vote: true });
+        }
+
+        const upvotesCount = await Vote.count({ where: { articleId, is_upvote: true, is_article_vote: true } });
+        const downvotesCount = await Vote.count({ where: { articleId, is_upvote: false, is_article_vote: true } });
+
+        res.json({ success: true, upvotes: upvotesCount, downvotes: downvotesCount });
+    } catch (error) {
+        console.error('Error upvoting article:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Route to get vote counts for an article
+router.get('/voteCounts/:articleId', async (req, res) => {
+    try {
+        const { articleId } = req.params;
+        const upvotesCount = await Vote.count({
+            where: { articleId, is_upvote: true, is_article_vote: true }
+        });
+        const downvotesCount = await Vote.count({
+            where: { articleId, is_upvote: false, is_article_vote: true }
+        });
+
+        res.json({ success: true, upvotes: upvotesCount, downvotes: downvotesCount });
+    } catch (error) {
+        console.error('Error fetching vote counts:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// POST route to downvote an article
+router.post('/downvote/:articleId', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { articleId } = req.params;
+
+        const article = await Article.findByPk(articleId);
+        const existingVote = await Vote.findOne({ where: { userId, articleId, is_article_vote: true } });
+
+        if (existingVote) {
+            if (!existingVote.is_upvote) {
+                await existingVote.destroy();
+            } else {
+                existingVote.is_upvote = false;
+                await existingVote.save();
+            }
+        } else {
+            await Vote.create({ userId, articleId, is_upvote: false, is_article_vote: true });
+        }
+
+        const upvotesCount = await Vote.count({ where: { articleId, is_upvote: true, is_article_vote: true } });
+        const downvotesCount = await Vote.count({ where: { articleId, is_upvote: false, is_article_vote: true } });
+
+        res.json({ success: true, upvotes: upvotesCount, downvotes: downvotesCount });
+    } catch (error) {
+        console.error('Error downvoting article:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.get('/api/posts/:postId', async (req, res) => {
+    try {
+        console.log("Fetching article with ID:", req.params.postId); // Debug log
+        const postId = req.params.postId;
+        const article = await Article.findByPk(postId, {
+            include: [{ model: Perspective }]
+        });
+        console.log("Article found:", article); // Debug log
+        if (!article) {
+            return res.status(404).json({ message: 'Article not found' });
+        }
+        res.json(article);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });

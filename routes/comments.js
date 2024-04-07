@@ -218,4 +218,17 @@ router.get('/replies/:id', async (req, res) => {
     res.json(replies);
 });
 
+router.get('/commentCount/:articleId', async (req, res) => {
+    try {
+        const articleId = req.params.articleId;
+        const commentCount = await Comment.count({
+            where: { articleId: articleId }
+        });
+        res.json({ articleId: articleId, commentCount: commentCount });
+    } catch (error) {
+        console.error('Error fetching comment count:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;

@@ -5,12 +5,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Show "My Communities" by default
     document.getElementById('myCommunitiesBody').style.display = "block";
     // Hide "All Communities" by default
-    document.getElementById('allCommunitiesBody').style.display = "block";
+    document.getElementById('allCommunitiesBody').style.display = "none";
 
     // Optionally preload data for "All Communities"
     await fetchAndDisplayAllCommunities();
-
-
 });
 
 async function fetchCurrentUserId() {
@@ -35,7 +33,7 @@ async function fetchAndDisplayPerspectives(userId) {
             credentials: 'include'
         });
         const userPerspectives = await response.json();
-        const perspectivesBody = document.getElementById('myCommunitiesBody');
+        const perspectivesBody = document.getElementById('myCommunitiesTable');
         const perspectiveDropdown = document.getElementById('perspectiveId');
 
         // Clear existing options
@@ -60,7 +58,6 @@ async function fetchAndDisplayPerspectives(userId) {
     }
 }
 
-// Assuming you will implement this function to fetch and display all perspectives
 async function fetchAndDisplayAllCommunities() {
     try {
         const response = await fetch('/perspectives/get_all_perspectives', {
@@ -70,7 +67,7 @@ async function fetchAndDisplayAllCommunities() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const allPerspectives = await response.json();
-        const perspectivesBody = document.getElementById('allCommunitiesBody');
+        const perspectivesBody = document.getElementById('allCommunitiesTable');
         perspectivesBody.innerHTML = allPerspectives.map(perspective => `
             <tr>
                 <td>${perspective.perspectiveName}</td>
@@ -81,89 +78,166 @@ async function fetchAndDisplayAllCommunities() {
     }
 }
 
-let currentIndex = 10; // Keep track of the current index for loading posts
+let currentIndex = 0; // Reset index when changing sort criteria
 
-// Function to fetch and display posts based on the currentIndex
-function fetchAndDisplayPosts() {
-    fetch(`/articles/get_latest?index=${currentIndex}`)
+function fetchAndDisplayPosts(sort = 'top') {
+    fetch(`/articles/get_latest?index=${currentIndex}&sort=${sort}`)
         .then(response => response.json())
-        .then(article => {
-            if (Object.keys(article).length === 0) {
+        .then(articles => {
+            if (articles.length === 0) {
                 alert('No more posts to load.');
                 return;
             }
             const mainContainer = document.getElementById('mainContainer');
-            const postElement = document.createElement('div');
-            postElement.innerHTML = `
-                <h3>${article.title}</h3>
-                <p>${article.content}</p>
-                <p>Submitted on: ${new Date(article.submitDate).toLocaleDateString()}</p>
-                <p>Perspective: ${article.Perspective ? article.Perspective.perspectiveName : 'N/A'}</p>
-                <button onclick="fetchAndDisplayComments(${article.id})">View Comments</button>
-            `;
-            mainContainer.appendChild(postElement);
-            currentIndex++; // Increment the index for the next load
+            mainContainer.innerHTML = ''; // Clear previous posts
+            articles.forEach(article => {
+                const postElement = createPostElement(article);
+                mainContainer.appendChild(postElement);
+            });
+            currentIndex += articles.length; // Prepare for the next load
         })
         .catch(error => console.error('Error fetching posts:', error));
 }
 
-// Fetch and display posts on page load
-document.addEventListener('DOMContentLoaded', fetchAndDisplayPosts);
+
 
 document.addEventListener('DOMContentLoaded', fetchAndDisplayPosts);
-
-document.getElementById('loadMore').addEventListener('click', fetchAndDisplayPosts);
 
 
 function createPostElement(post) {
-    // Create the container for the post
     const postElement = document.createElement('div');
     postElement.classList.add('post');
 
-    // Add the post title
+    const voteContainer = createVoteButtons(post.id);
+    voteContainer.classList.add('vote-container');
+    postElement.appendChild(voteContainer);
+
+    // Remove event listener from the parent container
+    postElement.addEventListener('click', () => {
+        // Handle post click event
+    });
+
+    const contentContainer = document.createElement('div');
+    contentContainer.classList.add('content-container');
+
     const title = document.createElement('h3');
     title.textContent = post.title;
-    postElement.appendChild(title);
+    contentContainer.appendChild(title);
 
-    // Add the post content
     const content = document.createElement('p');
     content.textContent = post.content;
-    postElement.appendChild(content);
+    contentContainer.appendChild(content);
 
-    // Add the submission date
-    const submitDate = document.createElement('p');
-    submitDate.textContent = `Submitted on: ${new Date(post.submitDate).toLocaleDateString()}`;
-    postElement.appendChild(submitDate);
+    postElement.appendChild(contentContainer);
 
-    // Optionally, add the perspective name if available
-    if (post.Perspective) {
-        const perspectiveName = document.createElement('p');
-        perspectiveName.textContent = `Perspective: ${post.Perspective.perspectiveName}`;
-        postElement.appendChild(perspectiveName);
-    }
+    const infoContainer = document.createElement('div');
+    infoContainer.classList.add('info-container');
 
-    // Add a button to view comments
-    const viewCommentsButton = document.createElement('button');
-    viewCommentsButton.textContent = 'View Comments';
-    viewCommentsButton.onclick = () => fetchAndDisplayComments(post.id);
-    postElement.appendChild(viewCommentsButton);
+    // Fetch comment count and append to infoContainer as before
+    fetch(`/comments/commentCount/${post.id}`)
+        .then(response => response.json())
+        .then(data => {
+            const commentCount = document.createElement('span');
+            commentCount.textContent = `Comments: ${data.commentCount}`;
+            infoContainer.appendChild(commentCount);
+        })
+        .catch(error => console.error('Error fetching comment count:', error));
+
+    const submitDate = document.createElement('span');
+    submitDate.textContent = ` ${new Date(post.submitDate).toLocaleDateString()}`;
+    infoContainer.appendChild(submitDate);
+
+    postElement.appendChild(infoContainer);
+
+    postElement.addEventListener('click', () => {
+        window.location.href = `/postDetails.html?postId=${post.id}`; // Navigate to post details page
+    });
 
     return postElement;
 }
 
-// Example usage:
-// Assuming you have a post object
-const examplePost = {
-    id: 1,
-    title: 'Example Post Title',
-    content: 'This is the content of the post.',
-    submitDate: new Date(), // Example date
-    Perspective: { perspectiveName: 'Example Perspective' }
-};
+function createVoteButtons(postId) {
+    const voteContainer = document.createElement('div');
+    voteContainer.className = 'vote-container';
 
-// Create the post element
-const postElement = createPostElement(examplePost);
+    // Upvote button with count
+    const upvoteButton = document.createElement('button');
+    upvoteButton.id = `upvoteButton-${postId}`;
+    upvoteButton.addEventListener('click', async () => {
+        event.stopPropagation(); // Prevent the click event from bubbling up to the parent container
+        await upvoteArticle(postId);
+        fetchAndDisplayVoteCounts(postId);
+    });
 
-// Append the post element to the main container
-const mainContainer = document.getElementById('mainContainer');
-mainContainer.appendChild(postElement);
+    // Downvote button with count
+    const downvoteButton = document.createElement('button');
+    downvoteButton.id = `downvoteButton-${postId}`;
+    downvoteButton.addEventListener('click', async () => {
+        event.stopPropagation(); // Prevent the click event from bubbling up to the parent container
+        await downvoteArticle(postId);
+        fetchAndDisplayVoteCounts(postId);
+    });
+
+    voteContainer.appendChild(upvoteButton);
+    voteContainer.appendChild(downvoteButton);
+
+    fetchAndDisplayVoteCounts(postId); // Initial fetch for the current vote counts
+
+    return voteContainer;
+}
+
+async function fetchAndDisplayVoteCounts(postId) {
+    const response = await fetch(`/articles/voteCounts/${postId}`);
+    const data = await response.json();
+    if (data.success) {
+        const upvoteButton = document.getElementById(`upvoteButton-${postId}`);
+        const downvoteButton = document.getElementById(`downvoteButton-${postId}`);
+        upvoteButton.textContent = `↑ ${data.upvotes}`;
+        downvoteButton.textContent = `↓ ${data.downvotes}`;
+    }
+}
+
+async function upvoteArticle(articleId) {
+    // Implement the fetch request to upvote an article
+    const response = await fetch(`/articles/upvote/${articleId}`, {
+        method: 'POST',
+        credentials: 'include'
+    });
+    fetchAndDisplayVoteCounts(articleId); // Refresh vote counts
+}
+
+async function downvoteArticle(articleId) {
+    // Implement the fetch request to downvote an article
+    const response = await fetch(`/articles/downvote/${articleId}`, {
+        method: 'POST',
+        credentials: 'include'
+    });
+    fetchAndDisplayVoteCounts(articleId); // Refresh vote counts
+}
+
+async function fetchAndDisplayComments(postId) {
+    try {
+        const response = await fetch(`/comments/comments/${postId}`);
+        const comments = await response.json();
+        const commentsContainer = document.getElementById('commentsContainer');
+        commentsContainer.innerHTML = ''; // Clear existing comments
+
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+
+            const commentContent = document.createElement('p');
+            commentContent.textContent = comment.text;
+            commentElement.appendChild(commentContent);
+
+            const commentAuthor = document.createElement('p');
+            commentAuthor.textContent = `By: ${comment.userId}`;
+            commentElement.appendChild(commentAuthor);
+
+            commentsContainer.appendChild(commentElement);
+        });
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+    }
+}
+

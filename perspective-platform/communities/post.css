@@ -1,0 +1,57 @@
+.post {
+    display: grid;
+    grid-template-columns: auto 1fr; /* Keep the vote button column and content column */
+    gap: 16px; /* Space between icon and content */
+    border: 1px solid #d7dadc;
+    padding: 16px;
+    margin-bottom: 12px;
+    background-color: #ffffff;
+    position: relative;
+    transition: box-shadow 0.3s ease;
+}
+
+.post * {
+    cursor: auto; /* Reset cursor for child elements to default */
+}
+
+.vote-container, .vote-container * {
+    cursor: pointer; /* Ensure vote buttons are clickable */
+    z-index: 2;
+}
+
+.vote-container {
+    grid-column: 1;
+    grid-row: 1 / span 3; /* Span across the height of the post */
+    display: flex;
+    flex-direction: column; /* Stack vote buttons vertically */
+    align-items: center;
+    justify-content: center; /* Center vote buttons */
+    z-index: 2;
+}
+
+.title-link, .post-content {
+    grid-column: 2;
+}
+
+.title-link {
+    font-weight: bold;
+    margin-bottom: 8px; /* Space between title and content */
+}
+
+.post-content {
+    grid-row: 2;
+}
+
+.info-container {
+    grid-column: 2;
+    grid-row: 3;
+    display: flex;
+    justify-content: space-between; /* Spread items to both ends */
+    align-items: center;
+    font-size: 0.8em; /* Smaller font size for meta info */
+    color: #787c7e; /* Meta info color */
+}
+
+.post:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Add shadow on hover for visual feedback */
+}

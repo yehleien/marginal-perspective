@@ -44,6 +44,8 @@
     border: none; /* Ensure no borders are causing extra columns */
 }
 
+/* If you want to specifically style the submit date or perspective name, you can add more specific classes in your JavaScript and style them here. */
+
 #mainContainer {
     margin-left: 250px; /* Set margin to accommodate the sidebar width */
     padding: 20px; /* Add padding for spacing */
@@ -67,4 +69,41 @@
     margin: 0; /* Ensure no margin is causing extra space */
     border: none; /* Ensure no borders are causing extra columns */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    font-size: 14px; /* Adjusts the text size of the table cells */
+}
+
+/* Additional styles */
+
+.vote-container {
+    position: relative;
+    z-index: 3; /* Ensure the vote container is above other elements */
+}
+
+.vote-container * {
+    cursor: pointer; /* Ensure vote buttons are clickable */
+}
+
+.post {
+    cursor: pointer; /* Set cursor to pointer for the entire post */
+}
+
+.content-container, .info-container {
+    cursor: pointer; /* Ensure clickable areas within the post */
+}
+
+.info-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: auto; /* Push the info container to the bottom */
+}
+
+
+/* Ensure there's no padding affecting the positioning of the black bar */
+.post * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    cursor: auto; /* Reset cursor for child elements to default */
+
 }

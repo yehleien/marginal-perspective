@@ -28,7 +28,7 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cookieParser());
-//app.use(express.static('perspective-platform'));
+
 app.use(session({
     secret: '69', // replace with your own secret key
     store: new SequelizeStore({
@@ -45,27 +45,7 @@ app.use('/comments', commentRoutes);
 app.use('/articles', articleRoutes);
 app.use('/perspectives', perspectiveRoutes);
 app.use('/UserPerspective', UserPerspectiveRoutes);
-
-// Added new route for fetching article content
-app.get('/articles/content/:url', async (req, res) => {
-    try {
-        const url = decodeURIComponent(req.params.url);
-        const { data } = await axios.get(url);
-        const $ = cheerio.load(data);
-        let content = $('body').text();
-
-        // Remove the junk at the beginning of the article
-        const articleStart = content.indexOf('>');
-        if (articleStart !== -1) {
-            content = content.substring(articleStart + 'Topics'.length);
-        }
-
-        res.json({ content });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Server error');
-    }
-});
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/account/login', (req, res) => {
     const { username, password } = req.body;
@@ -129,28 +109,17 @@ app.post('/account/signup', (req, res) => {
     });
 });
 
-async function scrapeAndSubmitArticles() {
-    try {
-        const { data } = await axios.get('https://text.npr.org/');
-        const $ = cheerio.load(data);
-        const articles = [];
-
-        $('li').each((index, element) => {
-            const title = $(element).text();
-            articles.push(title);
-        });
-
-        for (let article of articles) {
-            try {
-                await submitArticle(article);
-            } catch (error) {
-                console.error('Error submitting article:', error);
-            }
+// Add a logout route to clear the session and redirect to the login page
+app.post('/account/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            res.status(500).send('Server error');
+        } else {
+            res.redirect('/login'); // Redirect to the login page after logout
         }
-    } catch (error) {
-        console.error('Error scraping articles:', error);
-    }
-}
+    });
+});
 
 app.get('/account/current', (req, res) => {
     const userId = req.session.userId;
@@ -164,36 +133,6 @@ app.get('/account/current', (req, res) => {
         });
 });
 
-async function retrieveVotesFromDatabase(userId) {
-    try {
-        const votes = await Vote.findAll({
-            where: { userId: userId },
-            attributes: ['comment_id', 'is_upvote'] // Select only the necessary fields
-        });
-        return votes.map(vote => ({
-            commentId: vote.comment_id,
-            isUpvote: vote.is_upvote
-        }));
-    } catch (error) {
-        console.error('Error retrieving votes:', error);
-        throw error; // Rethrow the error to handle it in the route
-    }
-}
-
-app.get('/votes/:userId', async (req, res) => {
-    try {
-        const userId = parseInt(req.session.userId, 10); // Ensure the userId is an integer
-        if (isNaN(userId)) {
-            return res.status(400).send({ error: 'Invalid user ID' });
-        }
-        const votes = await retrieveVotesFromDatabase(userId);
-        res.json(votes);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error while retrieving votes' });
-    }
-});
-
 sequelize.authenticate()
     .then(() => {
         console.log('Connection has been established successfully.');
@@ -205,10 +144,13 @@ sequelize.authenticate()
 // Serve static files from the perspective-platform directory
 app.use(express.static('perspective-platform'));
 
+// Redirect from root to /communities
+app.get('/', (_req, res) => {
+    res.redirect('/communities');
+});
+
 // Define routes for each HTML page
-app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'home', 'home.html')));
-app.get('/home', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'home', 'home.html')));
-app.get('/focus', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'focus', 'focus.html')));
+//app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'communities', 'communities.html')));
 app.get('/account', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'account', 'account.html')));
 app.get('/submit', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'submit', 'submit.html')));
 app.get('/communities', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'communities', 'communities.html')));

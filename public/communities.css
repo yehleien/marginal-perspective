@@ -1,0 +1,99 @@
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px; /* Smaller text size */
+    background-color: #f6f6ef;
+}
+
+
+/* CSS targeting the specific class */
+.title {
+    font-size: 18px; /* Adjust the size as needed */
+}
+
+#commentText {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 10px;
+    font-size: 12px; /* Smaller text size for input */
+}
+
+#perspectiveSelect {
+    margin-bottom: 10px;
+    font-size: 12px; /* Smaller text size for select */
+}
+
+#submitComment {
+    background-color: #0056b3; /* Changed to existing blue */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 12px; /* Smaller text size for button */
+    margin-top: 10px;
+    float: left;
+}
+
+.comments-container {
+    margin-top: 10px;
+    width: 50%;
+    float: left;
+}
+
+.comment {
+    padding: 5px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 12px; /* Smaller text size for comments */
+}
+
+.comment-form {
+    width: 50%; /* Set the width to half of its container */
+    float: left; /* Align it to the left */
+    flex: 0 0 50%;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+/* Clearfix for the parent container to ensure it contains the floated element */
+.content:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.content {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 12px; /* Smaller text size for comments */
+}
+
+/* Additional details for customization */
+/* Background color for the comments section */
+.comments {
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Border color for the comments form */
+.comment-form {
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    float: left;
+    flex: 0 0 50%;
+    justify-content: center;
+    width: 50%;
+}
+
+/* Hover effect for the submit button */
+#submitComment:hover {
+    background-color: #e67e22;
+}
+
+/* Adjusting the select dropdown to match the blue theme */
+#perspectiveSelect {
+    background-color: #e6f4ff; /* Lighter shade of blue for contrast */
+    color: #0056b3; /* Text color */
+}

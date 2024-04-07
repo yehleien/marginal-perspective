@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post Details</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="communities.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="/home">
+                <img src="../assets/favicon.png" alt="Website Logo">
+            </a>
+        </div>
+        <nav>
+            <a href="/account" class="header-link">Account</a>
+            <a href="/submit" class="header-link">Submit</a>
+            <a href="/communities" class="header-link">Communities</a>
+            <a href="/index" class="header-link">Logout</a>
+        </nav>
+    </header>
+    <div class="content">
+        <div class="post-details">
+            <h1 class="title" id="postTitle">Loading...</h1>
+            <p id="postContent"></p>
+            <p id="postDate"></p>
+            <p id="postPerspective"></p>
+        </div>
+        <div class="comments">
+            <h2>Comments</h2>
+            <form id="commentForm" class="comment-form">
+                <textarea id="commentText" placeholder="Add a comment..." required></textarea>
+                <select id="perspectiveSelect" required>
+                    <!-- Options will be populated here -->
+                </select>
+                <input type="hidden" id="parentIDInput" value="" />
+                <button type="submit" id="submitComment">Submit</button>
+            </form>
+            <div id="commentsContainer" class="comments-container">
+                <!-- Comments will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the JavaScript file -->
+    <script src="postDetails.js"></script>
+</body>
+</html>

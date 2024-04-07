@@ -12,7 +12,20 @@ module.exports = (sequelize, DataTypes) => {
       },
       commentId: {
         type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      articleId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: 'article_id', // This maps the JS attribute to the actual DB column name
+        references: {
+          model: 'Articles', // This is a reference to another model
+          key: 'id', // This is the column name of the referenced model
+        },},
+      is_article_vote: {
+        type: DataTypes.BOOLEAN,
         allowNull: false,
+        defaultValue: false
       },
       is_upvote: {
         type: DataTypes.BOOLEAN,

@@ -14,13 +14,27 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = '/home'; // Redirect to home page
+            window.location.href = '/communities'; // Redirect to home page
         } else {
             console.error(data.error); // Display an error message
         }
     })
     .catch(error => {
         console.error('Error during login:', error);
+    });
+});
+
+// Add a logout functionality to redirect the user to the login page
+document.getElementById('logoutButton').addEventListener('click', function() {
+    fetch('/account/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(() => {
+        window.location.href = '/login'; // Redirect to the login page after logout
+    })
+    .catch(error => {
+        console.error('Error during logout:', error);
     });
 });
 
