@@ -100,20 +100,20 @@ router.post('/downvote/:articleId', async (req, res) => {
     }
 });
 
-router.get('/api/posts/:postId', async (req, res) => {
+router.get('/posts/:postId', async (req, res) => {
     try {
-        console.log("Fetching article with ID:", req.params.postId); // Debug log
+        console.log("Fetching article with ID:", req.params.postId);
         const postId = req.params.postId;
         const article = await Article.findByPk(postId, {
             include: [{ model: Perspective }]
         });
-        console.log("Article found:", article); // Debug log
+        console.log("Article found:", article);
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
         res.json(article);
     } catch (err) {
-        console.error(err);
+        console.error("Error fetching article:", err);
         res.status(500).json({ message: 'Server error' });
     }
 });

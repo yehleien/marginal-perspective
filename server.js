@@ -8,6 +8,11 @@ const DataTypes = Sequelize.DataTypes;
 const bcrypt = require('bcrypt');
 const axios = require('axios'); // Added axios for web scraping
 const cheerio = require('cheerio'); // Added cheerio for web scraping
+const cors = require('cors');
+require('dotenv').config();
+require('dotenv').config({ path: './spotify.env' });
+console.log('SPOTIFY_CLIENT_ID:', process.env.SPOTIFY_CLIENT_ID);
+console.log('SPOTIFY_REDIRECT_URI:', process.env.SPOTIFY_REDIRECT_URI);
 
 // Model definitions
 const { User, Article, Comment, Perspective, Vote, UserPerspective } = require('./models/index');
@@ -19,15 +24,17 @@ console.log("Models defined: User, Article, Comment, Perspective, UserPerspectiv
 const commentRoutes = require('./routes/comments');
 const articleRoutes = require('./routes/articles');
 const perspectiveRoutes = require('./routes/perspectives');
-const UserPerspectiveRoutes=require('./routes/UserPerspective');
+const UserPerspectiveRoutes = require('./routes/UserPerspective');
+const spotifyRoutes = require('./api-connections/spotify/spotifyRoutes');
 
-console.log("Routes defined: commentRoutes, articleRoutes, perspectiveRoutes, UserPerspective Routes");
+console.log("Routes defined: commentRoutes, articleRoutes, perspectiveRoutes, UserPerspective Routes, spotifyRoutes");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors());
 
 app.use(session({
     secret: '69', // replace with your own secret key
@@ -45,6 +52,8 @@ app.use('/comments', commentRoutes);
 app.use('/articles', articleRoutes);
 app.use('/perspectives', perspectiveRoutes);
 app.use('/UserPerspective', UserPerspectiveRoutes);
+app.use('/spotify', spotifyRoutes);
+app.use('/auth/spotify', spotifyRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/account/login', (req, res) => {

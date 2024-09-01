@@ -47,10 +47,10 @@
 /* If you want to specifically style the submit date or perspective name, you can add more specific classes in your JavaScript and style them here. */
 
 #mainContainer {
-    margin-left: 250px; /* Set margin to accommodate the sidebar width */
+    margin-left: 270px; /* Set margin to accommodate the sidebar width */
     padding: 20px; /* Add padding for spacing */
     height: 100vh; /* Full height of the viewport */
-    width: calc(100% - 250px); /* Calculate width based on sidebar width */
+    width: calc(100% - 270px); /* Calculate width based on sidebar width */
 }
 
 #myCommunitiesTable tr:nth-child(odd) td,
@@ -106,4 +106,35 @@
     box-sizing: border-box;
     cursor: auto; /* Reset cursor for child elements to default */
 
+}
+
+.community-section {
+    margin-bottom: 20px;
+}
+
+.section-header {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+#trendingNametags {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#trendingNametags td {
+    padding: 8px;
+    border: none;
+    font-size: 14px;
+}
+
+#trendingNametags tr:nth-child(odd) td {
+    background-color: #ffffff;
+}
+
+#trendingNametags tr:hover td {
+    background-color: #f1f1f1;
+    cursor: pointer;
 }

@@ -4,25 +4,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (postId) {
         await fetchAndDisplayPostDetails(postId);
         await fetchAndDisplayComments(postId);
+        await fetchAndDisplayPerspectives();
     }
 
     document.getElementById('commentForm').addEventListener('submit', async function(event) {
         event.preventDefault();
         const commentText = document.getElementById('commentText').value;
-        const perspectiveId = document.getElementById('perspectiveSelect').value;
-        const parentID = document.getElementById('parentIDInput').value || null; // Ensure parentID can be null
+        const perspectiveId = document.getElementById('perspectiveDropdown').value;
+        const parentID = document.getElementById('parentIDInput').value || null;
         await submitComment(commentText, perspectiveId, parentID, postId);
+        fetchAndDisplayComments(postId);
     });
 
     const user = await getCurrentUser();
     const perspectivesResponse = await fetch(`/perspectives/get_perspectives/${user.id}`);
     const perspectives = await perspectivesResponse.json();
-    const perspectiveSelect = document.getElementById('perspectiveSelect');
-    perspectives.forEach(perspective => {
+    const perspectiveDropdown = document.getElementById('perspectiveDropdown');    perspectives.forEach(perspective => {
         const option = document.createElement('option');
         option.value = perspective.perspectiveId;
         option.textContent = perspective.perspectiveName;
-        perspectiveSelect.appendChild(option);
+        perspectiveDropdown.appendChild(option);
     });
 });
 
@@ -43,7 +44,7 @@ async function submitComment(commentText, perspectiveId, parentID, postId) {
         await fetchAndDisplayComments(postId);
         document.getElementById('commentText').value = '';
         document.getElementById('parentIDInput').value = '';
-        document.getElementById('perspectiveSelect').value = '';
+        document.getElementById('perspectiveDropdown').value = '';
     } else {
         console.error('Error submitting comment:', await response.text());
     }
@@ -61,110 +62,354 @@ async function fetchAndDisplayComments(postId) {
 
     const user = await getCurrentUser();
 
-    comments.forEach(comment => {
-        const commentElement = createCommentElement(comment, user.id);
+    // Fetch all unique perspective IDs from comments
+    const perspectiveIds = [...new Set(comments.map(comment => comment.perspectiveId))];    
+    // Fetch perspective names
+    const perspectivesResponse = await fetch('/perspectives/get_perspectives_by_ids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ perspectiveIds }),
+        credentials: 'include'
+    });
+    const perspectives = await perspectivesResponse.json();
+
+    // Create a map of perspective IDs to names
+    const perspectiveMap = new Map(perspectives.map(p => [p.perspectiveId.toString(), p.perspectiveName]));
+
+    console.log('Perspective Map:', perspectiveMap);
+
+    // Fetch user's perspectives
+    const userPerspectivesResponse = await fetch(`/UserPerspective/get_user_perspectives/${user.id}`);
+    const userPerspectives = await userPerspectivesResponse.json();
+
+    // Create a nested structure for comments
+    const nestedComments = createNestedComments(comments);
+
+    nestedComments.forEach(comment => {
+        const commentElement = createCommentElement(comment, user.id, postId, perspectiveMap, userPerspectives);
         commentsContainer.appendChild(commentElement);
     });
 }
 
-function createCommentElement(comment, currentUserId) {
+function createNestedComments(comments) {
+    const commentMap = new Map();
+    const rootComments = [];
+
+    comments.forEach(comment => {
+        commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+
+    comments.forEach(comment => {
+        if (comment.parentID) {
+            const parentComment = commentMap.get(comment.parentID);
+            if (parentComment) {
+                parentComment.replies.push(commentMap.get(comment.id));
+            }
+        } else {
+            rootComments.push(commentMap.get(comment.id));
+        }
+    });
+
+    return rootComments;
+}
+
+function createCommentElement(comment, currentUserId, postId, perspectiveMap, userPerspectives, depth = 0) {
     const commentElement = document.createElement('div');
     commentElement.className = 'comment';
-    commentElement.style.display = 'grid';
-    commentElement.style.gridTemplateColumns = 'auto 1fr';
-    commentElement.style.gap = '16px';
-    commentElement.style.border = '1px solid #d7dadc';
-    commentElement.style.padding = '16px';
-    commentElement.style.marginBottom = '12px';
-    commentElement.style.backgroundColor = '#ffffff';
-    commentElement.style.position = 'relative';
+    commentElement.id = `comment-${comment.id}`;
 
-    // Create vote container
+    // Check if the user has the required perspective
+    const userHasPerspective = userPerspectives.some(up => up.perspectiveId === comment.perspectiveId);
+
+    // Vote container
     const voteContainer = document.createElement('div');
     voteContainer.className = 'vote-container';
-    voteContainer.style.display = 'flex';
-    voteContainer.style.flexDirection = 'column';
-    voteContainer.style.alignItems = 'center';
-    voteContainer.style.justifyContent = 'center';
 
-    // Upvote button
     const upvoteButton = document.createElement('button');
-    upvoteButton.id = `upvoteComment-${comment.id}`;
+    upvoteButton.innerHTML = '▲';
     upvoteButton.className = comment.userHasUpvoted ? 'upvoted' : '';
-    upvoteButton.innerHTML = `&#x25B2; (${comment.upvotes})`;
+    upvoteButton.disabled = !userHasPerspective;
     upvoteButton.addEventListener('click', async () => {
-        await upvoteComment(comment.id);
-        fetchAndDisplayComments(currentUserId); // Make sure this function is correctly implemented
+        if (userHasPerspective) {
+            const result = await upvoteComment(comment.id);
+            if (result.success) {
+                updateCommentVotes(comment, result, upvoteButton, downvoteButton);
+            }
+        }
     });
 
-    // Downvote button
+    const voteCount = document.createElement('span');
+    voteCount.textContent = comment.upvotes - comment.downvotes;
+
     const downvoteButton = document.createElement('button');
-    downvoteButton.id = `downvoteComment-${comment.id}`;
+    downvoteButton.innerHTML = '▼';
     downvoteButton.className = comment.userHasDownvoted ? 'downvoted' : '';
-    downvoteButton.innerHTML = `&#x25BC; (${comment.downvotes})`;
+    downvoteButton.disabled = !userHasPerspective;
     downvoteButton.addEventListener('click', async () => {
-        await downvoteComment(comment.id);
-        fetchAndDisplayComments(currentUserId); // Make sure this function is correctly implemented
+        if (userHasPerspective) {
+            const result = await downvoteComment(comment.id);
+            if (result.success) {
+                updateCommentVotes(comment, result, upvoteButton, downvoteButton);
+            }
+        }
     });
 
-    // Append buttons to vote container
     voteContainer.appendChild(upvoteButton);
+    voteContainer.appendChild(voteCount);
     voteContainer.appendChild(downvoteButton);
 
-    // Append vote container to comment element
-    commentElement.appendChild(voteContainer);
-
     // Comment content
-    const commentContent = document.createElement('div');
-    commentContent.className = 'comment-content';
-    commentContent.textContent = comment.text;
-    commentElement.appendChild(commentContent);
+    const contentContainer = document.createElement('div');
+    contentContainer.className = 'comment-content';
 
-    // Info container
-    const infoContainer = document.createElement('div');
-    infoContainer.className = 'info-container';
-    infoContainer.style.display = 'flex';
-    infoContainer.style.justifyContent = 'space-between';
-    infoContainer.style.alignItems = 'center';
-    infoContainer.style.fontSize = '0.8em';
-    infoContainer.style.color = '#787c7e';
-    // Assuming commentCount or similar data is available; adjust as necessary
-    const commentCountSpan = document.createElement('span');
-    commentCountSpan.textContent = `Comments: ${comment.commentCount || 0}`;
-    infoContainer.appendChild(commentCountSpan);
+    const commentHeader = document.createElement('div');
+    commentHeader.className = 'comment-header';
 
-    // Append info container to comment element
-    commentElement.appendChild(infoContainer);
+    const perspectiveName = perspectiveMap.get(comment.perspectiveId.toString()) || 'Unknown Perspective';
+    const perspectiveTag = document.createElement('span');
+    perspectiveTag.className = 'perspective-tag';
+    perspectiveTag.textContent = perspectiveName;
+    perspectiveTag.setAttribute('data-perspective', perspectiveName);
+    commentHeader.appendChild(perspectiveTag);
+
+    const commentText = document.createElement('div');
+    commentText.className = 'comment-text';
+    commentText.textContent = comment.text;
+
+    const commentFooter = document.createElement('div');
+    commentFooter.className = 'comment-footer';
+
+    const replyButton = document.createElement('button');
+    replyButton.className = 'reply-button';
+    replyButton.textContent = 'Reply';
+    replyButton.addEventListener('click', () => showReplyForm(comment, currentUserId, postId, perspectiveMap, userPerspectives, depth + 1));
+
+    commentFooter.appendChild(replyButton);
+
+    contentContainer.appendChild(commentHeader);
+    contentContainer.appendChild(commentText);
+    contentContainer.appendChild(commentFooter);
+
+    commentElement.appendChild(voteContainer);
+    commentElement.appendChild(contentContainer);
+
+    // Nested comments
+    if (comment.replies && comment.replies.length > 0) {
+        const repliesContainer = document.createElement('div');
+        repliesContainer.className = 'comment-thread';
+        comment.replies.forEach(reply => {
+            const replyElement = createCommentElement(reply, currentUserId, postId, perspectiveMap, userPerspectives, depth + 1);
+            repliesContainer.appendChild(replyElement);
+        });
+        contentContainer.appendChild(repliesContainer);
+    }
 
     return commentElement;
 }
 
-async function fetchAndDisplayPostDetails(postId) {
-    const response = await fetch(`/articles/api/posts/${postId}`, { credentials: 'include' });
-    if (!response.ok) {
-        console.error('Error fetching post details:', await response.text());
-        document.getElementById('postTitle').textContent = 'Error loading post';
-        return;
+function updateCommentVotes(comment, result, upvoteButton, downvoteButton) {
+    comment.upvotes = result.upvotes;
+    comment.downvotes = result.downvotes;
+    comment.userHasUpvoted = result.userHasUpvoted;
+    comment.userHasDownvoted = result.userHasDownvoted;
+    
+    const voteCount = upvoteButton.nextElementSibling;
+    voteCount.textContent = comment.upvotes - comment.downvotes;
+    
+    upvoteButton.className = comment.userHasUpvoted ? 'upvoted' : '';
+    downvoteButton.className = comment.userHasDownvoted ? 'downvoted' : '';
+}
+
+function showReplyForm(parentComment, currentUserId, postId, perspectiveMap, userPerspectives, depth) {
+    // Remove any existing reply form
+    const existingForm = document.querySelector('.reply-form');
+    if (existingForm) {
+        existingForm.remove();
     }
-    const postDetails = await response.json();
-    document.getElementById('postTitle').textContent = postDetails.title;
-    document.getElementById('postContent').textContent = postDetails.content;
-    document.getElementById('postDate').textContent = `Submitted on: ${new Date(postDetails.submitDate).toLocaleDateString()}`;
-    document.getElementById('postPerspective').textContent = `Perspective: ${postDetails.Perspective ? postDetails.Perspective.perspectiveName : 'N/A'}`;
+
+    const replyForm = document.createElement('form');
+    replyForm.className = 'reply-form';
+    replyForm.style.marginLeft = `${depth * 20}px`;
+    replyForm.style.marginTop = '10px';
+
+    const textarea = document.createElement('textarea');
+    textarea.required = true;
+    replyForm.appendChild(textarea);
+
+    const perspectiveDropdown = document.createElement('select');
+    perspectiveDropdown.required = true;
+    userPerspectives.forEach(perspective => {
+        if (perspective.perspectiveId === parentComment.perspectiveId) {
+            const option = document.createElement('option');
+            option.value = perspective.perspectiveId;
+            option.textContent = perspectiveMap.get(perspective.perspectiveId.toString()) || 'Unknown Perspective';
+            perspectiveDropdown.appendChild(option);
+        }
+    });
+    replyForm.appendChild(perspectiveDropdown);
+
+    const submitButton = document.createElement('button');
+    submitButton.textContent = 'Submit Reply';
+    submitButton.type = 'submit';
+    replyForm.appendChild(submitButton);
+
+    replyForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const replyText = textarea.value;
+        const perspectiveId = perspectiveDropdown.value;
+        await submitComment(replyText, perspectiveId, parentComment.id, postId);
+        replyForm.remove();
+        await fetchAndDisplayComments(postId);
+    });
+
+    // Insert the reply form after the parent comment
+    const parentCommentElement = document.getElementById(`comment-${parentComment.id}`);
+    if (parentCommentElement) {
+        parentCommentElement.insertAdjacentElement('afterend', replyForm);
+    }
 }
 
 async function upvoteComment(commentId) {
-    // Implement the fetch request to upvote a comment
-    const response = await fetch(`/comments/upvote/${commentId}`, {
-        method: 'POST',
-        credentials: 'include'
-    });
+    try {
+        const response = await fetch(`/comments/upvote/${commentId}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to upvote comment');
+        }
+        return result;
+    } catch (error) {
+        console.error('Error upvoting comment:', error);
+        return { success: false, message: error.message };
+    }
 }
 
 async function downvoteComment(commentId) {
-    // Implement the fetch request to downvote a comment
-    const response = await fetch(`/comments/downvote/${commentId}`, {
-        method: 'POST',
-        credentials: 'include'
-    });
+    try {
+        const response = await fetch(`/comments/downvote/${commentId}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to downvote comment');
+        }
+        return result;
+    } catch (error) {
+        console.error('Error downvoting comment:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+async function fetchAndDisplayPostDetails(postId) {
+    try {
+        console.log('Fetching post details for ID:', postId);
+        const response = await fetch(`/articles/posts/${postId}`, { credentials: 'include' });
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const post = await response.json();
+        console.log('Fetched post details:', post);
+
+        const titleElement = document.getElementById('postTitle');
+        titleElement.innerHTML = `<a href="${post.url}" target="_blank">${post.title}</a>`;
+        
+        const contentElement = document.getElementById('postContent');
+        contentElement.textContent = post.content;
+        
+        document.getElementById('postDate').textContent = new Date(post.submitDate).toLocaleDateString();
+        document.getElementById('postPerspective').textContent = post.Perspective ? post.Perspective.perspectiveName : 'Unknown';
+
+        const expandButton = document.getElementById('expandButton');
+        if (contentElement.scrollHeight > contentElement.clientHeight) {
+            expandButton.style.display = 'block';
+            expandButton.addEventListener('click', toggleContent);
+        }
+
+        // Fetch vote counts separately
+        const voteCountsResponse = await fetch(`/articles/voteCounts/${postId}`, { credentials: 'include' });
+        const voteCounts = await voteCountsResponse.json();
+
+        // Set up vote buttons
+        const upvoteButton = document.getElementById('upvoteButton');
+        const downvoteButton = document.getElementById('downvoteButton');
+        const voteCount = document.getElementById('voteCount');
+
+        voteCount.textContent = voteCounts.upvotes - voteCounts.downvotes;
+
+        upvoteButton.addEventListener('click', () => votePost(postId, 'upvote'));
+        downvoteButton.addEventListener('click', () => votePost(postId, 'downvote'));
+
+        updateVoteButtons(voteCounts);
+    } catch (error) {
+        console.error('Error fetching post details:', error);
+    }
+}
+
+function toggleContent() {
+    const contentElement = document.getElementById('postContent');
+    const expandButton = document.getElementById('expandButton');
+    
+    if (contentElement.classList.contains('expanded')) {
+        contentElement.classList.remove('expanded');
+        expandButton.textContent = 'Show More';
+    } else {
+        contentElement.classList.add('expanded');
+        expandButton.textContent = 'Show Less';
+    }
+}
+
+async function votePost(postId, voteType) {
+    try {
+        const response = await fetch(`/articles/${voteType}/${postId}`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        updateVoteButtons(result);
+    } catch (error) {
+        console.error('Error voting on post:', error);
+    }
+}
+
+function updateVoteButtons(voteCounts) {
+    const upvoteButton = document.getElementById('upvoteButton');
+    const downvoteButton = document.getElementById('downvoteButton');
+    const voteCount = document.getElementById('voteCount');
+
+    voteCount.textContent = voteCounts.upvotes - voteCounts.downvotes;
+    // Note: We don't have user's vote information here, so we can't update button styles
+}
+
+async function fetchAndDisplayPerspectives() {
+    try {
+        // Fetch the current user to get the userId
+        const userResponse = await fetch('/account/current', {
+            credentials: 'include' // include credentials to send the session cookie
+        });
+        const user = await userResponse.json();
+        const userId = user.id;
+
+        // Fetch the user's perspectives by matching UserPerspective with Perspective
+        const response = await fetch(`/UserPerspective/get_user_perspectives/${userId}`, {
+            credentials: 'include' // include credentials to send the session cookie
+        });
+        const userPerspectives = await response.json();
+        const perspectivesDropdown = document.getElementById('perspectiveDropdown');
+        perspectivesDropdown.innerHTML = ''; // Clear existing options first
+        userPerspectives.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type.perspectiveId; // Assuming each type has a unique ID
+            option.textContent = type.perspectiveName; // Assuming the name of the perspective type is what you want to display
+            perspectivesDropdown.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }

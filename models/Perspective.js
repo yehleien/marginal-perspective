@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false
     },
     type: {
-        type: DataTypes.ENUM('Default', 'Custom','AnotherType'),
+        type: DataTypes.ENUM('Default', 'Custom','AnotherType','spotify'),
         allowNull: false,
         defaultValue: 'Custom'
     },

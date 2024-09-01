@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Perspective } = require('../models');
+const Sequelize = require('sequelize'); // Import Sequelize
 
 router.get('/get_perspectives/:userId', (req, res) => {
     const userId = req.params.userId;
@@ -72,5 +73,24 @@ router.get('/get_all_perspectives', (req, res) => {
     });
 });
 
+
+// Add this new route to get perspectives by IDs
+router.post('/get_perspectives_by_ids', async (req, res) => {
+    try {
+        const { perspectiveIds } = req.body;
+        const perspectives = await Perspective.findAll({
+            where: {
+                perspectiveId: {
+                    [Sequelize.Op.in]: perspectiveIds
+                }
+            },
+            attributes: ['perspectiveId', 'perspectiveName']
+        });
+        res.json(perspectives);
+    } catch (error) {
+        console.error('Error fetching perspectives by IDs:', error);
+        res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
 
 module.exports = router;

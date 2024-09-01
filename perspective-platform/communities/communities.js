@@ -1,74 +1,19 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const userId = await fetchCurrentUserId();
-    await fetchAndDisplayPerspectives(userId); // Fetches perspectives for "My Communities"
-
-    // Show "My Communities" by default
-    document.getElementById('myCommunitiesBody').style.display = "block";
-    // Hide "All Communities" by default
-    document.getElementById('allCommunitiesBody').style.display = "none";
-
-    // Optionally preload data for "All Communities"
-    await fetchAndDisplayAllCommunities();
+    await fetchAndDisplayTrendingNametags();
+    fetchAndDisplayPosts();
 });
 
-async function fetchCurrentUserId() {
+async function fetchAndDisplayTrendingNametags() {
     try {
-        const response = await fetch('/account/current', {
-            credentials: 'include' // include credentials to send the session cookie
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const user = await response.json();
-        return user.id; // Assuming the user object has an id field
-    } catch (error) {
-        console.error('Error:', error);
-        return null; // Handle error appropriately in your application context
-    }
-}
-
-async function fetchAndDisplayPerspectives(userId) {
-    try {
-        const response = await fetch(`/UserPerspective/get_user_perspectives/${userId}`, {
-            credentials: 'include'
-        });
-        const userPerspectives = await response.json();
-        const perspectivesBody = document.getElementById('myCommunitiesTable');
-        const perspectiveDropdown = document.getElementById('perspectiveId');
-
-        // Clear existing options
-        perspectiveDropdown.innerHTML = '';
-
-        userPerspectives.forEach(userPerspective => {
-            // Populate the table
-            perspectivesBody.innerHTML += `
-                <tr>
-                    <td>${userPerspective.perspectiveName}</td>
-                </tr>
-            `;
-
-            // Populate the dropdown
-            const option = document.createElement('option');
-            option.value = userPerspective.id;
-            option.textContent = userPerspective.perspectiveName;
-            perspectiveDropdown.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-async function fetchAndDisplayAllCommunities() {
-    try {
-        const response = await fetch('/perspectives/get_all_perspectives', {
+        const response = await fetch('/perspectives/get_random_perspectives?limit=5', {
             credentials: 'include'
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const allPerspectives = await response.json();
-        const perspectivesBody = document.getElementById('allCommunitiesTable');
-        perspectivesBody.innerHTML = allPerspectives.map(perspective => `
+        const randomPerspectives = await response.json();
+        const nametagsBody = document.getElementById('trendingNametagsBody');
+        nametagsBody.innerHTML = randomPerspectives.map(perspective => `
             <tr>
                 <td>${perspective.perspectiveName}</td>
             </tr>
@@ -78,7 +23,7 @@ async function fetchAndDisplayAllCommunities() {
     }
 }
 
-let currentIndex = 0; // Reset index when changing sort criteria
+let currentIndex = 0;
 
 function fetchAndDisplayPosts(sort = 'top') {
     fetch(`/articles/get_latest?index=${currentIndex}&sort=${sort}`)
@@ -98,11 +43,6 @@ function fetchAndDisplayPosts(sort = 'top') {
         })
         .catch(error => console.error('Error fetching posts:', error));
 }
-
-
-
-document.addEventListener('DOMContentLoaded', fetchAndDisplayPosts);
-
 
 function createPostElement(post) {
     const postElement = document.createElement('div');

@@ -5,6 +5,7 @@
     <title>Post Details</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="communities.css">
+    <link rel="stylesheet" href="postDetails.css">
 </head>
 <body>
     <header>
@@ -22,20 +23,34 @@
     </header>
     <div class="content">
         <div class="post-details">
-            <h1 class="title" id="postTitle">Loading...</h1>
-            <p id="postContent"></p>
-            <p id="postDate"></p>
-            <p id="postPerspective"></p>
+            <div class="vote-container">
+                <button id="upvoteButton" class="vote-button">▲</button>
+                <span id="voteCount" class="vote-count">0</span>
+                <button id="downvoteButton" class="vote-button">▼</button>
+            </div>
+            <div class="post-content">
+                <h1 id="postTitle" class="post-title"></h1>
+                <div class="post-meta">
+                    <span id="postPerspective" class="perspective-tag"></span>
+                    <span id="postDate" class="post-date"></span>
+                </div>
+                <div class="post-content-wrapper">
+                    <p id="postContent" class="post-content"></p>
+                    <button id="expandButton" class="expand-button">Show More</button>
+                </div>
+            </div>
         </div>
         <div class="comments">
             <h2>Comments</h2>
             <form id="commentForm" class="comment-form">
                 <textarea id="commentText" placeholder="Add a comment..." required></textarea>
-                <select id="perspectiveSelect" required>
-                    <!-- Options will be populated here -->
-                </select>
+                <div class="form-footer">
+                    <select id="perspectiveDropdown" name="perspectiveId" required>
+                        <!-- Options will be populated here -->
+                    </select>
+                    <button type="submit" id="submitComment">Submit</button>
+                </div>
                 <input type="hidden" id="parentIDInput" value="" />
-                <button type="submit" id="submitComment">Submit</button>
             </form>
             <div id="commentsContainer" class="comments-container">
                 <!-- Comments will be loaded here -->

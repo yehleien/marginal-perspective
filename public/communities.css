@@ -43,6 +43,8 @@ body {
     padding: 5px;
     border-bottom: 1px solid #e0e0e0;
     font-size: 12px; /* Smaller text size for comments */
+    display: flex;
+    margin-bottom: 15px;
 }
 
 .comment-form {
@@ -96,4 +98,82 @@ body {
 #perspectiveSelect {
     background-color: #e6f4ff; /* Lighter shade of blue for contrast */
     color: #0056b3; /* Text color */
+}
+
+.comment-thread {
+    margin-left: 20px;
+    border-left: 1px solid #ccc;
+    padding-left: 10px;
+}
+
+.vote-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.comment-content {
+    flex-grow: 1;
+}
+
+.comment-header {
+    font-size: 0.9em;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.comment-text {
+    margin-bottom: 5px;
+}
+
+.comment-footer {
+    font-size: 0.8em;
+}
+
+.reply-button {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+}
+
+.reply-button:hover {
+    text-decoration: underline;
+}
+
+.perspective-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: white;
+    background-color: #3498db; /* Default color, you can change this */
+    margin-right: 10px;
+}
+
+/* You can add more specific colors for different perspectives if needed */
+.perspective-tag[data-perspective="Police Officer"] {
+    background-color: #3498db;
+}
+
+.perspective-tag[data-perspective="Citizen"] {
+    background-color: #2ecc71;
+}
+
+/* Add more perspective-specific colors as needed */
+
+.vote-container button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.post-details .title a {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.post-details .title a:hover {
+    text-decoration: underline;
 }

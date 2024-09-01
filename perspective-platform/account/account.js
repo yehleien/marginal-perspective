@@ -208,4 +208,86 @@ document.getElementById('addPerspectiveButton').addEventListener('click', async 
     saveCell.appendChild(saveButton);
 });
 
+async function connectSpotify() {
+    try {
+        const accessToken = await getSpotifyAccessToken();
+        const userId = await getCurrentUserId();
+        
+        if (!accessToken) {
+            throw new Error('Failed to obtain Spotify access token');
+        }
+
+        const response = await fetch('/spotify/generate-perspectives', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({ userId, accessToken }),
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to generate Spotify perspectives');
+        }
+
+        const result = await response.json();
+        if (result.success) {
+            alert('Spotify perspectives generated successfully!');
+            fetchAndDisplayPerspectives();
+        } else {
+            throw new Error(result.error || 'Failed to generate Spotify perspectives');
+        }
+    } catch (error) {
+        console.error('Error connecting Spotify:', error);
+        alert(`Error connecting Spotify: ${error.message}`);
+    }
+}
+
+// Add this function to get the current user's ID
+async function getCurrentUserId() {
+    const response = await fetch('/account/current', { credentials: 'include' });
+    const user = await response.json();
+    return user.id;
+}
+
+// Implement this function to handle Spotify OAuth
+async function getSpotifyAccessToken() {
+    try {
+        const response = await fetch('/spotify/auth-params');
+        const data = await response.json();
+
+        if (!data.clientId || !data.redirectUri) {
+            throw new Error('Missing client ID or redirect URI');
+        }
+
+        const authUrl = `https://accounts.spotify.com/authorize?client_id=${data.clientId}&response_type=token&redirect_uri=${encodeURIComponent(data.redirectUri)}&scope=${encodeURIComponent(data.scope)}`;
+
+        const authWindow = window.open(authUrl, 'Spotify Auth', 'width=800,height=600');
+
+        return new Promise((resolve, reject) => {
+            window.spotifyCallback = (hash) => {
+                const params = new URLSearchParams(hash.substring(1));
+                const accessToken = params.get('access_token');
+                if (accessToken) {
+                    resolve(accessToken);
+                } else {
+                    reject(new Error('Failed to get access token'));
+                }
+                authWindow.close();
+            };
+
+            const checkClosed = setInterval(() => {
+                if (authWindow.closed) {
+                    clearInterval(checkClosed);
+                    reject(new Error('Auth window closed'));
+                }
+            }, 1000);
+        });
+    } catch (error) {
+        console.error('Error fetching auth params:', error);
+        throw error;
+    }
+}
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Comment, User, Perspective, Article, Vote } = require('../models');
+const { Comment, User, Perspective, Article, Vote, UserPerspective } = require('../models');
 
 router.get('/comments/:articleId', async (req, res) => {
     try {
@@ -137,72 +137,104 @@ router.post('/submit_comment', async (req, res) => {
 // POST route to upvote a comment
 router.post('/upvote/:commentId', async (req, res) => {
     try {
-        const userId = req.session.userId; // replace with how you get the user's ID
+        const userId = req.session.userId;
         const { commentId } = req.params;
 
-        const comment = await Comment.findByPk(commentId);
+        const comment = await Comment.findByPk(commentId, {
+            include: [{ model: Perspective, as: 'Perspective' }]
+        });
+
+        if (!comment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        if (!comment.Perspective) {
+            return res.status(400).json({ message: 'Comment has no associated perspective' });
+        }
+
+        // Check if the user has the required perspective
+        const userPerspective = await UserPerspective.findOne({
+            where: { userId, perspectiveId: comment.Perspective.perspectiveId }
+        });
+
+        if (!userPerspective) {
+            return res.status(403).json({ message: 'You do not have the required perspective to vote on this comment' });
+        }
+
         const existingVote = await Vote.findOne({ where: { userId, commentId } });
 
         if (existingVote) {
             if (existingVote.is_upvote) {
-                // User has already upvoted this comment, so we remove their upvote
                 await existingVote.destroy();
                 await comment.decrement('upvotes');
             } else {
-                // User has downvoted this comment, so we'll change their vote to an upvote
                 existingVote.is_upvote = true;
                 await existingVote.save();
                 await comment.decrement('downvotes');
                 await comment.increment('upvotes');
             }
         } else {
-            // User has not voted on this comment, so we'll create a new upvote
             await Vote.create({ userId, commentId, is_upvote: true });
             await comment.increment('upvotes');
         }
 
-        // Reload the comment instance from the database to get the updated vote count
         await comment.reload();
         res.json({ success: true, upvotes: comment.upvotes, downvotes: comment.downvotes });
     } catch (error) {
         console.error('Error upvoting comment:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
 // POST route to downvote a comment
 router.post('/downvote/:commentId', async (req, res) => {
     try {
-        const userId = req.session.userId; // replace with how you get the user's ID
+        const userId = req.session.userId;
         const { commentId } = req.params;
 
-        const comment = await Comment.findByPk(commentId);
+        const comment = await Comment.findByPk(commentId, {
+            include: [{ model: Perspective, as: 'Perspective' }]
+        });
+
+        if (!comment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        if (!comment.Perspective) {
+            return res.status(400).json({ message: 'Comment has no associated perspective' });
+        }
+
+        // Check if the user has the required perspective
+        const userPerspective = await UserPerspective.findOne({
+            where: { userId, perspectiveId: comment.Perspective.perspectiveId }
+        });
+
+        if (!userPerspective) {
+            return res.status(403).json({ message: 'You do not have the required perspective to vote on this comment' });
+        }
+
         const existingVote = await Vote.findOne({ where: { userId, commentId } });
 
         if (existingVote) {
             if (!existingVote.is_upvote) {
-                // User has already downvoted this comment, so we remove their downvote
                 await existingVote.destroy();
                 await comment.decrement('downvotes');
             } else {
-                // User has upvoted this comment, so we'll change their vote to a downvote
                 existingVote.is_upvote = false;
                 await existingVote.save();
                 await comment.decrement('upvotes');
                 await comment.increment('downvotes');
             }
         } else {
-            // User has not voted on this comment, so we'll create a new downvote
             await Vote.create({ userId, commentId, is_upvote: false });
             await comment.increment('downvotes');
         }
 
-        // Reload the comment instance from the database to get the updated vote count
         await comment.reload();
         res.json({ success: true, upvotes: comment.upvotes, downvotes: comment.downvotes });
     } catch (error) {
         console.error('Error downvoting comment:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
