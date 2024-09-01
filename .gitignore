@@ -10,4 +10,5 @@ node_modules/
 #ignore config
 /config
 /.pgpass
+/.ca-bundle.crt
 
