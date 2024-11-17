@@ -153,11 +153,11 @@ app.get('/account/current', (req, res) => {
 
 sequelize.authenticate()
     .then(() => {
-        console.log('Connection to Retool Cloud database has been established successfully.');
+        console.log('Database connection established successfully.');
         return sequelize.sync();
     })
     .then(() => console.log('Database synchronized'))
-    .catch(err => console.error('Unable to connect to the Retool Cloud database:', err));
+    .catch(err => console.error('Unable to connect to the database:', err));
 
 // Serve static files from the perspective-platform directory
 app.use(express.static('perspective-platform'));
