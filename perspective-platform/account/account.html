@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Marginal Perspective</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="account.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="/home">
+                <img src="../assets/favicon.png" alt="Website Logo">
+            </a>
+        </div>
+        <nav>
+            <a href="/insights" class="header-link">Insights</a>
+            <a href="/account" class="header-link">Account</a>
+            <a href="/submit" class="header-link">Submit</a>
+            <a href="/home" class="header-link">Home</a>
+            <a href="/index" class="header-link">Logout</a>
+        </nav>
+    </header>
+
+    <div class="account-container">
+        <h2 id="welcomeMessage"></h2>
+        
+        <div class="account-menu">
+            <a href="/account" class="menu-item active">Perspectives</a>
+            <a href="/account/gmail-manager.html" class="menu-item">Gmail Manager</a>
+            <!-- Add other menu items as needed -->
+        </div>
+
+        <div class="perspectives-section">
+            <div class="perspective-controls">
+                <button onclick="showAddPerspectiveModal()" class="add-perspective-btn">Add Perspective</button>
+                <button onclick="connectSpotify()" class="spotify-btn">
+                    <i class="fab fa-spotify"></i> Connect Spotify
+                </button>
+                <button onclick="connectGmail()" class="gmail-btn">
+                    <i class="fab fa-google"></i> Connect Gmail
+                </button>
+            </div>
+            <table id="perspectivesTable">
+                <thead>
+                    <tr>
+                        <th>Perspective Name</th>
+                        <th>Last Updated</th>
+                        <th>Type</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="perspectivesBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="user-content">
+            <div class="profile-tabs">
+                <button class="tab-button active" id="postsTab">Posts</button>
+                <button class="tab-button" id="commentsTab">Comments</button>
+            </div>
+            <div class="user-content-container">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <form id="updatePerspectiveForm" style="display: none;">
+        <input type="hidden" id="updatePerspectiveId">
+        <input type="text" id="updatePerspectiveName" placeholder="New Perspective Name">
+        <div id="perspectiveTypeDropdown"></div>
+        <button type="submit">Update Perspective</button>
+    </form>
+
+    <script src="account.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+.communities-container {
+    display: flex;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.sidebar {
+    width: 300px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.community-selector-container {
+    margin-bottom: 30px;
+}
+
+.community-selector-container h2 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.community-selector {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #fff;
+}
+
+.community-stats {
+    margin-top: 20px;
+}
+
+.community-stats h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.post-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-form h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+#postContent {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.submit-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+.community-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.post-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.post-author {
+    font-weight: bold;
+    color: #333;
+}
+
+.post-date {
+    color: #666;
+    font-size: 12px;
+}
+
+.post-content {
+    color: #444;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .communities-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        position: static;
+    }
+} 

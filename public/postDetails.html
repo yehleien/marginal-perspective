@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Post Details</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="communities.css">
+    <link rel="stylesheet" href="postDetails.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="/home">
+                <img src="../assets/favicon.png" alt="Website Logo">
+            </a>
+        </div>
+        <nav>
+            <a href="/account" class="header-link">Account</a>
+            <a href="/submit" class="header-link">Submit</a>
+            <a href="/home" class="header-link">Home</a>
+            <a href="/index" class="header-link">Logout</a>
+        </nav>
+    </header>
+    <div class="content">
+        <div class="post-details">
+            <div class="vote-container">
+                <button id="upvoteButton" class="vote-button">▲</button>
+                <span id="voteCount" class="vote-count">0</span>
+                <button id="downvoteButton" class="vote-button">▼</button>
+            </div>
+            <div class="post-content">
+                <h1 id="postTitle" class="post-title"></h1>
+                <div class="post-meta">
+                    <span id="postPerspective" class="perspective-tag"></span>
+                    <span id="postDate" class="post-date"></span>
+                </div>
+                <div class="post-content-wrapper">
+                    <p id="postContent" class="post-content"></p>
+                    <button id="expandButton" class="expand-button">Show More</button>
+                </div>
+            </div>
+        </div>
+        <div class="comments">
+            <h2>Comments</h2>
+            <form id="commentForm" class="comment-form">
+                <textarea id="commentText" placeholder="Add a comment..." required></textarea>
+                <div class="form-footer">
+                    <select id="perspectiveDropdown" name="perspectiveId" required>
+                        <!-- Options will be populated here -->
+                    </select>
+                    <button type="submit" id="submitComment">Submit</button>
+                </div>
+                <input type="hidden" id="parentIDInput" value="" />
+            </form>
+            <div id="commentsContainer" class="comments-container">
+                <!-- Comments will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Include the JavaScript file -->
+    <script src="postDetails.js"></script>
+</body>
+</html>

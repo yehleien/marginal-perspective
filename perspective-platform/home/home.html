@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="post.css">
+
+
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="/home">
+            <img src="../assets/favicon.png" alt="Website Logo">
+            </a>
+        </div>
+        <nav>
+            <a href="/insights" class="header-link">Insights</a>
+            <a href="/communities" class="header-link">Communities</a>
+            <a href="/account" class="header-link">Account</a>
+            <a href="/submit" class="header-link">Submit</a>
+            <a href="/home" class="header-link">Home</a>
+            <a href="/index" class="header-link">Logout</a>
+        </nav>
+    </header>
+    <div id="sidebarTableContainer">
+        <div class="home-section">
+            <div class="section-header">Trending Nametags</div>
+            <table id="trendingNametags">
+                <tbody id="trendingNametagsBody" class="section-body">
+                    <!-- Trending nametags will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- This will be initially hidden and will be placed in the main container -->
+    <div id="mainContainer"> 
+
+        </div>
+    </div>
+    <script src="home.js"></script>
+</body>
+</html>

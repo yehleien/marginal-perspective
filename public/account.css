@@ -1,0 +1,109 @@
+.profile-tabs {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #edeff1;
+    padding-bottom: 1px;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #878a8c;
+    cursor: pointer;
+    position: relative;
+}
+
+.tab-button.active {
+    color: #1a1a1b;
+    font-weight: 600;
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #0079d3;
+}
+
+.user-content-container {
+    margin-top: 16px;
+}
+
+.profile-post, .profile-comment {
+    padding: 16px;
+    border: 1px solid #edeff1;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    background: white;
+}
+
+.post-metadata, .comment-metadata {
+    font-size: 12px;
+    color: #878a8c;
+    margin-bottom: 8px;
+}
+
+.post-perspective, .comment-perspective {
+    background: #f6f7f8;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-right: 8px;
+}
+
+.post-title {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+.post-title a {
+    color: #1a1a1b;
+    text-decoration: none;
+}
+
+.post-title a:hover {
+    color: #0079d3;
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.post-stats, .comment-stats {
+    font-size: 12px;
+    color: #878a8c;
+}
+
+.post-stats span, .comment-stats span {
+    margin-right: 16px;
+}
+
+.comment-context {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #0079d3;
+    text-decoration: none;
+}
+
+.comment-context:hover {
+    text-decoration: underline;
+}
+
+.loading, .no-content, .error {
+    text-align: center;
+    padding: 32px;
+    color: #878a8c;
+}
+
+.error {
+    color: #ff4500;
+} 

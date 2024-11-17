@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gmail Integration Manager | Marginal Perspective</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .gmail-manager-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .scan-controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #scanTypeSelect {
+            flex: 1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        #scanButton {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        #scanButton:disabled {
+            background-color: #ccc;
+        }
+        
+        .scan-results {
+            margin-top: 30px;
+        }
+        
+        .perspective-result {
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .danger-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 30px;
+            cursor: pointer;
+        }
+        
+        .header-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: #007bff;
+            font-size: 16px;
+            margin-right: 20px;
+        }
+        
+        .back-button:hover {
+            text-decoration: underline;
+        }
+        
+        h2 {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="gmail-manager-container">
+        <div class="header-section">
+            <a href="/account" class="back-button">← Back to Account</a>
+            <h2>Gmail Integration Manager</h2>
+        </div>
+        
+        <div class="scan-controls">
+            <select id="scanTypeSelect">
+                <option value="">Select what to scan for...</option>
+                <option value="ticketmaster">Ticketmaster Events</option>
+                <option value="netflix">Netflix Subscription</option>
+                <option value="amazon">Amazon Orders</option>
+                <option value="spotify">Spotify Subscription</option>
+                <option value="airlines">Flight Bookings</option>
+                <option value="hotels">Hotel Bookings</option>
+            </select>
+            
+            <button id="scanButton">Scan Emails</button>
+        </div>
+
+        <div class="scan-results">
+            <h3>Found Perspectives</h3>
+            <div id="resultsContainer"></div>
+        </div>
+
+        <button id="disconnectGmail" class="danger-btn">Disconnect Gmail</button>
+    </div>
+
+    <script src="gmail-manager.js"></script>
+</body>
+</html> 

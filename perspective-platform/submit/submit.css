@@ -1,0 +1,28 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 33vh; /* Middle third of the page */
+    flex-direction: column;
+}
+
+#submitLinkSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding-top: 100px;
+}
+#submitLinkSection label,
+#submitLinkSection input,
+#submitLinkSection select,
+#submitLinkSection textarea,
+#submitLinkSection input[type="submit"] {
+    display: block;
+    margin-bottom: 10px;
+    width: 100%;
+}
+header {
+    z-index: 1; /* Ensure the header is above other elements */
+    position: relative;
+}

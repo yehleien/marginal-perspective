@@ -1,0 +1,37 @@
+/* Global Reset and Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #add8e6;
+    color: black;
+    padding: 0.5rem 1rem;
+}
+
+.logo, nav {
+    display: flex;
+    align-items: center;
+}
+
+nav {
+    gap: 20px; /* Maintain space between navigation links */
+}
+
+header nav .header-link:not(:last-child) {
+    margin-right: auto; /* Adjusts to push logout to the right */
+}
+.logo + nav .header-link:first-child {
+    margin-left: 20px; /* Space between logo and the first link */
+}
