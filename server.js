@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
@@ -127,23 +128,35 @@ app.post('/account/signup', (req, res) => {
     });
 });
 
-// Add a logout route to clear the session and redirect to the login page
-app.post('/account/logout', (req, res) => {
-    req.session.destroy(err => {
+// Remove all other logout routes and keep just this one
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
         if (err) {
             console.error('Error destroying session:', err);
-            res.status(500).send('Server error');
-        } else {
-            res.redirect('/login'); // Redirect to the login page after logout
+            return res.status(500).send('Server error');
         }
+        res.clearCookie('connect.sid');
+        res.redirect('/login');
     });
 });
 
 app.get('/account/current', (req, res) => {
-    const userId = req.session.userId;
-    User.findOne({ where: { id: userId } })
+    if (!req.session || !req.session.userId) {
+        return res.json({ success: false, error: 'Not logged in' });
+    }
+
+    User.findOne({ where: { id: req.session.userId } })
         .then(user => {
-            res.json({ username: user.username, email: user.email, id: user.id });
+            if (user) {
+                res.json({ 
+                    success: true, 
+                    username: user.username, 
+                    email: user.email, 
+                    id: user.id 
+                });
+            } else {
+                res.json({ success: false, error: 'User not found' });
+            }
         })
         .catch(error => {
             console.error('Error:', error);
@@ -263,3 +276,61 @@ const oauth2Client = new google.auth.OAuth2(
 
 // Make oauth2Client available to routes
 app.locals.oauth2Client = oauth2Client;
+
+// Add this route to check session status
+app.get('/auth/check-session', (req, res) => {
+    res.json({
+        isLoggedIn: !!req.session.userId
+    });
+});
+
+// Add this route to handle logout
+app.get('/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/index.html');
+});
+
+// Add near the top with other requires
+const passport = require('./api-connections/linkedin/linkedinStrategy');
+
+// Add these BEFORE your routes
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // set to true if using https
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Add the LinkedIn routes
+app.use('/auth/linkedin', require('./routes/auth/linkedin'));
+
+// Update your auth routes import
+app.use('/auth', require('./routes/auth'));
+
+// Add with other requires at top
+const linkedinRoutes = require('./routes/auth/linkedin');
+
+// Add with other app.use statements
+app.use('/auth/linkedin', linkedinRoutes);
+
+// Add this near your other static routes
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'perspective-platform', 'index', 'index.html'));
+});
+
+// Add these Passport serialize/deserialize functions
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findByPk(id);
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
+});

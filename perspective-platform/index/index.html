@@ -3,22 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marginal Perspective</title>
-    <!-- Link your styles.css file here -->
+    <title>Login - Marginal Perspective</title>
     <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
-    <div class="center-container">
-        <h1>Welcome to Marginal Perspective!</h1>
-        <div id="login-signup">
+    <header class="modern-header">
+        <div class="logo">
+            <a href="/home">
+                <img src="../assets/favicon.png" alt="Website Logo">
+            </a>
+        </div>
+        <nav class="main-nav">
+            <a href="/insights" class="header-link">Insights</a>
+            <a href="/communities" class="header-link">Communities</a>
+            <a href="/account" class="header-link">Account</a>
+            <a href="/submit" class="header-link">Submit</a>
+            <a href="/home" class="header-link">Home</a>
+            <a href="/login" class="header-link" id="authButton">Login / Sign Up</a>
+        </nav>
+    </header>
+
+    <div class="login-container">
+        <div class="login-box">
+            <h1>Welcome Back</h1>
             <form id="loginForm">
-                <input type="text" id="loginUsername" placeholder="Username" required>
-                <input type="password" id="loginPassword" placeholder="Password" required>
-                <button type="submit">Login</button>
+                <div class="form-group">
+                    <input type="text" id="loginUsername" placeholder="Username" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button type="submit" class="login-button">Login</button>
             </form>
-            <button onclick="window.location.href='signup.html'">Sign Up</button>
+            <div class="auth-links">
+                <p>Don't have an account? <a href="/signup.html">Sign Up</a></p>
+            </div>
         </div>
     </div>
-<!-- Add this before the closing body tag -->
-<script src="auth.js"></script></body>
+    <script src="/index/auth.js"></script>
+</body>
 </html>

@@ -26,3 +26,95 @@ header {
     z-index: 1; /* Ensure the header is above other elements */
     position: relative;
 }
+
+.submit-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: calc(100vh - 60px);
+    padding: 40px 20px;
+    background-color: #f6f7f8;
+}
+
+.submit-box {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 32px;
+    width: 100%;
+    max-width: 800px;
+}
+
+.submit-box h2 {
+    margin: 0 0 24px 0;
+    color: #1a1a1b;
+    font-size: 24px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.submit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 12px;
+    border: 1px solid #edeff1;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #0079d3;
+}
+
+.form-group textarea {
+    min-height: 300px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.submit-button {
+    background-color: #0079d3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+    background-color: #0061a9;
+}
+
+.submit-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Added styles for better mobile experience */
+@media (max-width: 768px) {
+    .submit-box {
+        padding: 20px;
+    }
+
+    .form-group textarea {
+        min-height: 200px;
+    }
+}

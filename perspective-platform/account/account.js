@@ -44,26 +44,109 @@ async function fetchAndDisplayPerspectives() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    const updateForm = document.getElementById('updatePerspectiveForm');
-    if (updateForm) {
-        updateForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const perspectiveId = document.getElementById('updatePerspectiveId').value;
-            const name = document.getElementById('updatePerspectiveName').value;
-            const type = document.getElementById('updatePerspectiveType').value;
-
-            if (!perspectiveId) {
-                console.error('Error: Perspective ID is undefined');
-                return;
-            }
-
-            updatePerspective(perspectiveId, name, type);
-        });
-    } else {
-        console.error('Error: updatePerspectiveForm does not exist in the DOM.');
+const integrations = [
+    {
+        name: 'LinkedIn',
+        icon: '../assets/integrations/linkedin.svg',
+        description: 'Connect your professional network',
+        connectFunction: 'connectLinkedIn',
+        status: 'disconnected'
+    },
+    {
+        name: 'Spotify',
+        icon: '../assets/integrations/spotify.svg',
+        description: 'Connect your music preferences',
+        connectFunction: 'connectSpotify',
+        status: 'disconnected'
+    },
+    {
+        name: 'Gmail',
+        icon: '../assets/integrations/gmail.svg',
+        description: 'Connect your email activity',
+        connectFunction: 'connectGmail',
+        status: 'disconnected'
+    },
+    {
+        name: 'GitHub',
+        icon: '../assets/integrations/github.svg',
+        description: 'Connect your development activity',
+        connectFunction: 'connectGithub',
+        status: 'coming_soon'
+    },
+    {
+        name: 'Twitter',
+        icon: '../assets/integrations/twitter.svg',
+        description: 'Connect your social presence',
+        connectFunction: 'connectTwitter',
+        status: 'coming_soon'
+    },
+    {
+        name: 'Stripe',
+        icon: '../assets/integrations/stripe.svg',
+        description: 'Connect your payment history',
+        connectFunction: 'connectStripe',
+        status: 'coming_soon'
     }
+];
+
+function renderIntegrations() {
+    const container = document.querySelector('.integrations-grid');
+    container.innerHTML = integrations.map(integration => `
+        <div class="integration-card ${integration.status === 'connected' ? 'connected' : ''}">
+            <img src="${integration.icon}" alt="${integration.name}">
+            <h3>${integration.name}</h3>
+            <p>${integration.description}</p>
+            <button 
+                onclick="${integration.status !== 'coming_soon' ? integration.connectFunction + '()' : ''}"
+                ${integration.status === 'coming_soon' ? 'disabled' : ''}
+            >
+                ${integration.status === 'coming_soon' ? 'Coming Soon' : 
+                  integration.status === 'connected' ? 'Connected' : 'Connect'}
+            </button>
+        </div>
+    `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+    await fetchAndDisplayUsername();
+    await fetchAndDisplayPerspectives();
+    
+    const perspectivesTab = document.getElementById('perspectivesTab');
+    const integrationsTab = document.getElementById('integrationsTab');
+    const activityTab = document.getElementById('activityTab');
+    
+    const perspectivesContent = document.getElementById('perspectivesContent');
+    const integrationsContent = document.getElementById('integrationsContent');
+    const activityContent = document.getElementById('activityContent');
+
+    function switchTab(activeTab, activeContent) {
+        // Remove active class from all tabs and content
+        [perspectivesTab, integrationsTab, activityTab].forEach(tab => 
+            tab.classList.remove('active'));
+        [perspectivesContent, integrationsContent, activityContent].forEach(content => 
+            content.classList.remove('active'));
+        
+        // Add active class to selected tab and content
+        activeTab.classList.add('active');
+        activeContent.classList.add('active');
+    }
+
+    perspectivesTab.addEventListener('click', () => {
+        switchTab(perspectivesTab, perspectivesContent);
+    });
+
+    integrationsTab.addEventListener('click', () => {
+        switchTab(integrationsTab, integrationsContent);
+        renderIntegrations();
+    });
+
+    activityTab.addEventListener('click', () => {
+        switchTab(activityTab, activityContent);
+        loadUserContent();
+    });
+
+    // Initial render of integrations
+    renderIntegrations();
 });
 
 // Function to update a perspective with type
@@ -91,119 +174,98 @@ async function updatePerspective(perspectiveId, perspectiveName, perspectiveType
 
 async function loadUserContent() {
     try {
-        const contentContainer = document.createElement('div');
-        contentContainer.className = 'user-content';
-
-        // Posts Section
+        const activityContent = document.getElementById('activityContent');
         const postsSection = document.createElement('div');
         postsSection.className = 'posts-section';
         postsSection.innerHTML = `
-            <h3>Your Posts</h3>
+            <h2>Your Posts</h2>
             <div class="posts-container"></div>
             <button class="load-more-btn" id="loadMorePosts">Load More Posts</button>
         `;
-        
-        // Comments Section
+
         const commentsSection = document.createElement('div');
         commentsSection.className = 'comments-section';
         commentsSection.innerHTML = `
-            <h3>Your Comments</h3>
+            <h2>Your Comments</h2>
             <div class="comments-container"></div>
             <button class="load-more-btn" id="loadMoreComments">Load More Comments</button>
         `;
 
-        contentContainer.appendChild(postsSection);
-        contentContainer.appendChild(commentsSection);
-        document.querySelector('.account-container').appendChild(contentContainer);
+        // Clear existing content and append new sections
+        activityContent.querySelector('.activity-section').innerHTML = '';
+        activityContent.querySelector('.activity-section').appendChild(postsSection);
+        activityContent.querySelector('.activity-section').appendChild(commentsSection);
 
-        // Initial load
-        await loadUserPosts(0);
-        await loadUserComments(0);
+        // Load both posts and comments initially
+        await Promise.all([
+            loadUserPosts(0),
+            loadUserComments(0)
+        ]);
 
         // Add event listeners for load more buttons
-        document.getElementById('loadMorePosts').onclick = () => {
+        document.getElementById('loadMorePosts').addEventListener('click', () => {
             const currentPosts = document.querySelectorAll('.posts-container .profile-post').length;
             loadUserPosts(currentPosts);
-        };
+        });
 
-        document.getElementById('loadMoreComments').onclick = () => {
+        document.getElementById('loadMoreComments').addEventListener('click', () => {
             const currentComments = document.querySelectorAll('.comments-container .profile-comment').length;
             loadUserComments(currentComments);
-        };
+        });
     } catch (error) {
         console.error('Error loading user content:', error);
     }
 }
 
-async function loadUserPosts(offset = 0) {
-    try {
-        const response = await fetch(`/articles/get_user_posts?offset=${offset}&limit=5`, {
-            credentials: 'include'
-        });
-        const posts = await response.json();
-        
-        const postsContainer = document.querySelector('.posts-container');
-        if (Array.isArray(posts)) {
-            posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.className = 'profile-post';
-                postElement.innerHTML = `
-                    <div class="post-metadata">
-                        <span class="post-perspective">${post.Perspective?.perspectiveName || 'Unknown'}</span>
-                        <span class="post-date">${new Date(post.submitDate).toLocaleDateString()}</span>
-                    </div>
-                    <h4 class="post-title"><a href="/post/${post.id}">${post.title}</a></h4>
-                `;
-                postsContainer.appendChild(postElement);
-            });
-
-            if (posts.length < 5) {
-                document.getElementById('loadMorePosts').style.display = 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+async function loadUserPosts(offset) {
+    const response = await fetch(`/articles/user_posts?offset=${offset}`, {
+        credentials: 'include'
+    });
+    const posts = await response.json();
+    const container = document.querySelector('.posts-container');
+    
+    posts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.className = 'profile-post';
+        postElement.innerHTML = `
+            <div class="post-content">
+                <div class="post-metadata">
+                    <span class="post-perspective">${post.perspectiveName}</span>
+                    <span>${new Date(post.createdAt).toLocaleDateString()}</span>
+                </div>
+                <h3 class="post-title">
+                    <a href="/post/${post.id}">${post.title}</a>
+                </h3>
+                <p>${post.content}</p>
+            </div>
+        `;
+        container.appendChild(postElement);
+    });
 }
 
-async function loadUserComments(offset = 0) {
-    try {
-        const response = await fetch(`/comments/get_user_comments?offset=${offset}&limit=10`, {
-            credentials: 'include'
-        });
-        const comments = await response.json();
-        
-        const commentsContainer = document.querySelector('.comments-container');
-        if (Array.isArray(comments)) {
-            comments.forEach(comment => {
-                const commentElement = document.createElement('div');
-                commentElement.className = 'profile-comment';
-                commentElement.innerHTML = `
-                    <div class="comment-metadata">
-                        <span class="comment-perspective">${comment.Perspective?.perspectiveName || 'Unknown'}</span>
-                        <span class="comment-date">${new Date(comment.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <p class="comment-content">${comment.text}</p>
-                    <a href="/post/${comment.Article?.id}" class="comment-post-link">View Post: ${comment.Article?.title || 'Unknown Post'}</a>
-                `;
-                commentsContainer.appendChild(commentElement);
-            });
-
-            if (comments.length < 10) {
-                document.getElementById('loadMoreComments').style.display = 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+async function loadUserComments(offset) {
+    const response = await fetch(`/comments/get_user_comments?offset=${offset}&limit=10`, {
+        credentials: 'include'
+    });
+    const comments = await response.json();
+    const container = document.querySelector('.comments-container');
+    
+    comments.forEach(comment => {
+        const commentElement = document.createElement('div');
+        commentElement.className = 'profile-comment';
+        commentElement.innerHTML = `
+            <div class="comment-content">
+                <div class="comment-metadata">
+                    <span class="comment-perspective">${comment.Perspective?.perspectiveName || 'Unknown'}</span>
+                    <span>${new Date(comment.createdAt).toLocaleDateString()}</span>
+                </div>
+                <p>${comment.text}</p>
+                <a href="/post/${comment.article?.id || '#'}">View Post</a>
+            </div>
+        `;
+        container.appendChild(commentElement);
+    });
 }
-
-// Update the window.onload function
-window.onload = async function() {
-    await fetchAndDisplayUsername();
-    await fetchAndDisplayPerspectives();
-    await loadUserContent();
-};
 
 // Show the update form with the current perspective name and type
 function showUpdateForm(perspectiveId, name, type) {
@@ -463,4 +525,48 @@ window.gmailCallback = async (searchParams) => {
         }
     }
 };
+
+async function loadUserPosts(offset) {
+    const response = await fetch(`/articles/user_posts?offset=${offset}&limit=10`, {
+        credentials: 'include'
+    });
+    const posts = await response.json();
+    const container = document.querySelector('.posts-container');
+    
+    posts.forEach(post => {
+        const postElement = document.createElement('div');
+        postElement.className = 'profile-post';
+        postElement.innerHTML = `
+            <div class="post-content">
+                <div class="post-metadata">
+                    <span class="post-perspective">${post.Perspective?.perspectiveName || 'Unknown'}</span>
+                    <span>${new Date(post.createdAt).toLocaleDateString()}</span>
+                </div>
+                <h3 class="post-title">
+                    <a href="/post/${post.id}">${post.title}</a>
+                </h3>
+                <p>${post.content || ''}</p>
+            </div>
+        `;
+        container.appendChild(postElement);
+    });
+}
+
+async function connectLinkedIn() {
+    try {
+        const width = 450;
+        const height = 730;
+        const left = (window.screen.width / 2) - (width / 2);
+        const top = (window.screen.height / 2) - (height / 2);
+        
+        window.open(
+            '/auth/linkedin',
+            'LinkedIn Login',
+            `width=${width},height=${height},left=${left},top=${top}`
+        );
+    } catch (error) {
+        console.error('Error connecting to LinkedIn:', error);
+        alert('Failed to connect to LinkedIn');
+    }
+}
 

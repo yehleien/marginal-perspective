@@ -3,66 +3,42 @@
 <head>
     <title>Perspective Insights | Marginal Perspective</title>
     <link rel="stylesheet" href="/styles.css">
-    <style>
-        .insights-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .perspective-card {
-            border: 1px solid #ddd;
-            padding: 20px;
-            border-radius: 8px;
-            background: white;
-        }
-        
-        .perspective-name {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin: 5px 0;
-            padding: 5px 0;
-            border-bottom: 1px solid #eee;
-        }
-    </style>
+    <link rel="stylesheet" href="insights.css">
 </head>
 <body>
-    <header>
+    <header class="modern-header">
         <div class="logo">
             <a href="/home">
                 <img src="../assets/favicon.png" alt="Website Logo">
             </a>
         </div>
-        <nav>
+        <nav class="main-nav">
             <a href="/insights" class="header-link">Insights</a>
             <a href="/communities" class="header-link">Communities</a>
             <a href="/account" class="header-link">Account</a>
             <a href="/submit" class="header-link">Submit</a>
             <a href="/home" class="header-link">Home</a>
-            <a href="/index" class="header-link">Logout</a>
+            <a href="/index" class="header-link" id="authButton">Login / Sign Up</a>
         </nav>
     </header>
     
     <div class="insights-container">
-        <h1>Perspective Insights</h1>
-        <div id="statsGrid" class="stats-grid">
-            <!-- Perspective cards will be inserted here -->
+        <div class="insights-grid">
+            <div class="perspectives-overview">
+                <h2>Perspectives Overview</h2>
+                <div id="statsGrid" class="stats-grid">
+                    <!-- Perspective cards will be inserted here -->
+                </div>
+            </div>
+            <div class="perspective-details">
+                <h2>Perspective Details</h2>
+                <div id="detailsPanel" class="details-panel">
+                    <p class="select-message">Select a perspective to view details</p>
+                </div>
+            </div>
         </div>
     </div>
-
     <script src="insights.js"></script>
+    <script src="/index/auth.js"></script>
 </body>
 </html> 

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Perspective, UserPerspective, Comment, Vote } = require('../models');
-const { Sequelize } = require('sequelize');
+const { Perspective, User, sequelize } = require('../models');
 
 router.get('/get_perspectives/:userId', (req, res) => {
     const userId = req.params.userId;
@@ -81,7 +80,7 @@ router.post('/get_perspectives_by_ids', async (req, res) => {
         const perspectives = await Perspective.findAll({
             where: {
                 perspectiveId: {
-                    [Sequelize.Op.in]: perspectiveIds
+                    [sequelize.Op.in]: perspectiveIds
                 }
             },
             attributes: ['perspectiveId', 'perspectiveName']
@@ -99,22 +98,100 @@ router.get('/insights', async (req, res) => {
             attributes: [
                 'perspectiveId',
                 'perspectiveName',
-                'type',
-                'createdAt'
+                [
+                    sequelize.literal(`(
+                        SELECT COUNT(DISTINCT "UserPerspective"."userId")
+                        FROM "UserPerspectives" AS "UserPerspective"
+                        WHERE "UserPerspective"."perspectiveId" = "Perspective"."perspectiveId"
+                    )`),
+                    'userCount'
+                ],
+                [
+                    sequelize.literal(`(
+                        SELECT COUNT(*)
+                        FROM "Comments" AS "Comment"
+                        WHERE "Comment"."perspectiveId" = "Perspective"."perspectiveId"
+                    )`),
+                    'commentCount'
+                ],
+                [
+                    sequelize.literal(`(
+                        SELECT COALESCE(SUM(COALESCE("Comment"."upvotes", 0)), 0)
+                        FROM "Comments" AS "Comment"
+                        WHERE "Comment"."perspectiveId" = "Perspective"."perspectiveId"
+                    )`),
+                    'upvotes'
+                ],
+                [
+                    sequelize.literal(`(
+                        SELECT COALESCE(SUM(COALESCE("Comment"."downvotes", 0)), 0)
+                        FROM "Comments" AS "Comment"
+                        WHERE "Comment"."perspectiveId" = "Perspective"."perspectiveId"
+                    )`),
+                    'downvotes'
+                ]
             ],
-            include: [{
-                model: UserPerspective,
-                as: 'UserPerspectives',
-                attributes: [[Sequelize.fn('COUNT', Sequelize.col('UserPerspectives.userId')), 'userCount']],
-                required: false
-            }],
-            group: ['Perspective.perspectiveId'],
-            raw: true
+            order: [['perspectiveName', 'ASC']]
         });
-        
         res.json(insights);
     } catch (error) {
-        console.error('Error getting insights:', error);
+        console.error('Error fetching insights:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/details/:perspectiveId', async (req, res) => {
+    try {
+        const perspective = await Perspective.findOne({
+            where: { perspectiveId: req.params.perspectiveId },
+            attributes: [
+                'perspectiveId',
+                'perspectiveName',
+                'verificationMethod',
+                'verificationDate',
+                'activityScore',
+                'expertiseYears',
+                'organization',
+                'verificationStatus',
+                [
+                    sequelize.literal(`(
+                        SELECT COUNT(DISTINCT "UserPerspective"."userId")
+                        FROM "UserPerspectives" AS "UserPerspective"
+                        WHERE "UserPerspective"."perspectiveId" = "Perspective"."perspectiveId"
+                    )`),
+                    'userCount'
+                ],
+                [
+                    sequelize.literal(`(
+                        SELECT COUNT(*)
+                        FROM "Comments" AS "Comment"
+                        WHERE "Comment"."perspectiveId" = "Perspective"."perspectiveId"
+                    )`),
+                    'commentCount'
+                ],
+                [
+                    sequelize.literal(`(
+                        SELECT COALESCE(AVG(COALESCE("Comment"."upvotes", 0)), 0)::float
+                        FROM "Comments" AS "Comment"
+                        WHERE "Comment"."perspectiveId" = "Perspective"."perspectiveId"
+                    )`),
+                    'avgUpvotes'
+                ]
+            ]
+        });
+
+        if (!perspective) {
+            return res.status(404).json({ error: 'Perspective not found' });
+        }
+
+        // Convert avgUpvotes to a number if it's not already
+        const responseData = perspective.toJSON();
+        responseData.avgUpvotes = Number(responseData.avgUpvotes) || 0;
+
+        console.log('Sending perspective data:', responseData);
+        res.json(responseData);
+    } catch (error) {
+        console.error('Error fetching perspective details:', error);
         res.status(500).json({ error: error.message });
     }
 });

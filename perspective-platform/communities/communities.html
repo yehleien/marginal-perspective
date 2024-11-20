@@ -6,19 +6,19 @@
     <link rel="stylesheet" href="communities.css">
 </head>
 <body>
-    <header>
+    <header class="modern-header">
         <div class="logo">
             <a href="/home">
                 <img src="../assets/favicon.png" alt="Website Logo">
             </a>
         </div>
-        <nav>
+        <nav class="main-nav">
             <a href="/insights" class="header-link">Insights</a>
             <a href="/communities" class="header-link">Communities</a>
             <a href="/account" class="header-link">Account</a>
             <a href="/submit" class="header-link">Submit</a>
             <a href="/home" class="header-link">Home</a>
-            <a href="/index" class="header-link">Logout</a>
+            <a href="/index" class="header-link" id="authButton">Login / Sign Up</a>
         </nav>
     </header>
 
@@ -58,5 +58,7 @@
             </div>
         </div>
     </div>
+
+    <script src="/index/auth.js"></script>
 </body>
 </html> 

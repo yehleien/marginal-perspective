@@ -6,74 +6,69 @@
     <title>Account - Marginal Perspective</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="account.css">
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
 </head>
 <body>
-    <header>
+    <header class="modern-header">
         <div class="logo">
             <a href="/home">
                 <img src="../assets/favicon.png" alt="Website Logo">
             </a>
         </div>
-        <nav>
+        <nav class="main-nav">
             <a href="/insights" class="header-link">Insights</a>
+            <a href="/communities" class="header-link">Communities</a>
             <a href="/account" class="header-link">Account</a>
             <a href="/submit" class="header-link">Submit</a>
             <a href="/home" class="header-link">Home</a>
-            <a href="/index" class="header-link">Logout</a>
+            <a href="/index" class="header-link" id="authButton">Login / Sign Up</a>
         </nav>
     </header>
 
     <div class="account-container">
-        <h2 id="welcomeMessage"></h2>
+        <h1 id="welcomeMessage"></h1>
         
-        <div class="account-menu">
-            <a href="/account" class="menu-item active">Perspectives</a>
-            <a href="/account/gmail-manager.html" class="menu-item">Gmail Manager</a>
-            <!-- Add other menu items as needed -->
+        <div class="account-tabs">
+            <button class="tab-button active" id="perspectivesTab">Perspectives</button>
+            <button class="tab-button" id="integrationsTab">Integrations</button>
+            <button class="tab-button" id="activityTab">Activity</button>
         </div>
 
-        <div class="perspectives-section">
-            <div class="perspective-controls">
-                <button onclick="showAddPerspectiveModal()" class="add-perspective-btn">Add Perspective</button>
-                <button onclick="connectSpotify()" class="spotify-btn">
-                    <i class="fab fa-spotify"></i> Connect Spotify
-                </button>
-                <button onclick="connectGmail()" class="gmail-btn">
-                    <i class="fab fa-google"></i> Connect Gmail
-                </button>
+        <div id="perspectivesContent" class="tab-content active">
+            <div class="perspectives-section">
+                <table id="perspectivesTable">
+                    <thead>
+                        <tr>
+                            <th>Perspective Name</th>
+                            <th>Last Updated</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="perspectivesBody">
+                    </tbody>
+                </table>
             </div>
-            <table id="perspectivesTable">
-                <thead>
-                    <tr>
-                        <th>Perspective Name</th>
-                        <th>Last Updated</th>
-                        <th>Type</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="perspectivesBody">
-                </tbody>
-            </table>
         </div>
 
-        <div class="user-content">
-            <div class="profile-tabs">
-                <button class="tab-button active" id="postsTab">Posts</button>
-                <button class="tab-button" id="commentsTab">Comments</button>
+        <div id="integrationsContent" class="tab-content">
+            <div class="integrations-grid">
+                <!-- Integration cards will be populated here -->
             </div>
-            <div class="user-content-container">
-                <!-- Content will be loaded here -->
+        </div>
+
+        <div id="activityContent" class="tab-content">
+            <div class="activity-section">
+                <h2>Your Posts</h2>
+                <div id="userPosts"></div>
+                
+                <h2>Your Comments</h2>
+                <div id="userComments"></div>
             </div>
         </div>
     </div>
 
-    <form id="updatePerspectiveForm" style="display: none;">
-        <input type="hidden" id="updatePerspectiveId">
-        <input type="text" id="updatePerspectiveName" placeholder="New Perspective Name">
-        <div id="perspectiveTypeDropdown"></div>
-        <button type="submit">Update Perspective</button>
-    </form>
-
+    <script src="../index/auth.js"></script>
     <script src="account.js"></script>
 </body>
 </html>

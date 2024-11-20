@@ -4,37 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Marginal Perspective</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="signup.css">
 </head>
-<header>
-    <div class="logo">
-        <div class="logo-icon">MP</div>
-        <h1>Marginal Perspective</h1>
-    </div>
-    <nav>
-        <a href="home.html" class="header-link">Home</a>
-        <a href="account.html" class="header-link">Account</a>
-        <a href="focus.html" class="header-link">Focus</a>
-        <a href="index.html" class="header-link">Logout</a>
-    </nav>
-</header>
 <body>
+    <header class="modern-header">
+        <div class="logo">
+            <a href="/home">
+                <img src="../assets/favicon.png" alt="Website Logo">
+            </a>
+        </div>
+        <nav class="main-nav">
+            <a href="/insights" class="header-link">Insights</a>
+            <a href="/communities" class="header-link">Communities</a>
+            <a href="/account" class="header-link">Account</a>
+            <a href="/submit" class="header-link">Submit</a>
+            <a href="/home" class="header-link">Home</a>
+            <a href="/index" class="header-link" id="authButton">Login / Sign Up</a>
+        </nav>
+    </header>
 
-    <div class="form-container">
-        <form id="signupForm">
-            <div>
-                <input type="text" id="signupUsername" placeholder="Username" required>
+    <div class="signup-container">
+        <div class="signup-box">
+            <h1>Create Account</h1>
+            <form id="signupForm">
+                <div class="form-group">
+                    <input type="text" id="signupUsername" placeholder="Username" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="signupEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="signupPassword" placeholder="Password" required>
+                </div>
+                <button type="submit" class="signup-button">Create Account</button>
+            </form>
+            <div class="auth-links">
+                <p>Already have an account? <a href="/index.html">Login</a></p>
             </div>
-            <div>
-                <input type="email" id="signupEmail" placeholder="Email" required>
-            </div>
-            <div>
-                <input type="password" id="signupPassword" placeholder="Password" required>
-            </div>
-            <div>
-                <button type="submit">Sign Up</button>
-            </div>
-        </form>
+        </div>
     </div>
     <script src="signup.js"></script>
 </body>

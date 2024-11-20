@@ -13,14 +13,46 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    type: {
-      type: DataTypes.STRING,
+    categoryType: {
+      type: DataTypes.ENUM(
+        'demographic', 
+        'geographic', 
+        'psychographic',
+        'sociographic',
+        'technographic',
+        'professional',
+        'economic'
+      ),
       allowNull: false,
-      defaultValue: 'custom'
+      defaultValue: 'demographic'
     },
-    options: {
+    verificationMethod: {
+      type: DataTypes.ENUM('document', 'professional_network', 'organization', 'education', 'unverified'),
+      defaultValue: 'unverified'
+    },
+    verificationDate: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    activityScore: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0
+    },
+    expertiseYears: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    organization: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    verificationDocuments: {
       type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: true
+    },
+    verificationStatus: {
+      type: DataTypes.ENUM('pending', 'verified', 'rejected'),
+      defaultValue: 'pending'
     }
   });
 
