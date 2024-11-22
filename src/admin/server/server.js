@@ -39,6 +39,14 @@ const authMiddleware = (req, res, next) => {
 
 app.use(express.json());
 
+// Serve static files
+app.use(express.static(path.join(__dirname, '../client')));
+
+// Serve index.html for all routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/index.html'));
+});
+
 // Protected admin routes
 app.get('/api/schema', authMiddleware, async (req, res) => {
   try {
@@ -87,6 +95,11 @@ app.put('/api/table/:table/:id', authMiddleware, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Add this catch-all route at the end
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/index.html'));
 });
 
 app.listen(PORT, () => {

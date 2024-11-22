@@ -30,8 +30,10 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.3",
     "nodemon": "^3.0.2",
-    "sequelize-cli": "^6.6.2"
+    "sequelize-cli": "^6.6.2",
+    "vite": "^5.4.11"
   },
   "proxy": "http://localhost:3000",
   "scripts": {
@@ -42,6 +44,7 @@
     "schemas": "node scripts/getSchemas.js",
     "admin": "node src/admin/server.js",
     "start-admin": "NODE_ENV=production node src/admin/server/server.js",
-    "dev-admin": "NODE_ENV=development node src/admin/server/server.js"
+    "dev-admin": "NODE_ENV=development node src/admin/server/server.js",
+    "build-admin": "vite build src/admin/client --outDir ../../dist/admin"
   }
 }
