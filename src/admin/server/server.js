@@ -2,9 +2,26 @@ import express from 'express';
 import { Sequelize } from 'sequelize';
 import session from 'express-session';
 import jwt from 'jsonwebtoken';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Database connection
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  }
+});
 
 // JWT auth middleware
 const authMiddleware = (req, res, next) => {
@@ -20,26 +37,32 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Use existing database connection from models/index.js
-import db from '../../models/index.js';
-const { sequelize } = db;
+app.use(express.json());
 
 // Protected admin routes
 app.get('/api/schema', authMiddleware, async (req, res) => {
-  const tables = await sequelize.query(`
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public'
-  `);
-  res.json(tables);
+  try {
+    const [tables] = await sequelize.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+    `);
+    res.json(tables);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.get('/api/table/:name', authMiddleware, async (req, res) => {
-  const data = await sequelize.query(`
-    SELECT * FROM "${req.params.name}" 
-    LIMIT 100
-  `);
-  res.json(data);
+  try {
+    const [data] = await sequelize.query(`
+      SELECT * FROM "${req.params.name}" 
+      LIMIT 100
+    `);
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Add edit endpoint
