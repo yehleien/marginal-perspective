@@ -17,7 +17,7 @@ const devDB = new Sequelize({
 const prodDB = new Sequelize({
   username: "ncymp",
   password: "zoaWhydre4GxT28J494SxA",
-  database: "marginal perspective",
+  database: "marginal-perspective-db-4494",
   host: "chocolate-chip-14096.7tt.aws-us-east-1.cockroachlabs.cloud",
   port: 26257,
   dialect: "postgres",
