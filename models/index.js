@@ -9,9 +9,11 @@ const db = {};
 
 let sequelize;
 if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
+  const dbUrl = new URL(process.env.DATABASE_URL);
+  sequelize = new Sequelize(decodeURIComponent(dbUrl.pathname.substring(1)), dbUrl.username, dbUrl.password, {
+    host: dbUrl.hostname,
+    port: dbUrl.port,
     dialect: 'postgres',
-    protocol: 'postgres',
     dialectOptions: {
       ssl: {
         require: true,
