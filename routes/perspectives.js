@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Perspective, UserPerspective, User, sequelize } = require('../models');
 const { Op } = require('sequelize');
-const DEFAULT_PERSPECTIVES = require('../config/perspectives');
+//const DEFAULT_PERSPECTIVES = require('../config/perspectives');
 
 router.get('/get_perspectives/:userId', async (req, res) => {
     try {
