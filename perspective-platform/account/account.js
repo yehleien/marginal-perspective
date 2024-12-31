@@ -1,572 +1,534 @@
 // perspective-platform/account.js
-const perspectiveTypes = ['Default', 'Custom', 'AnotherType', 'custom'];
 
-async function fetchAndDisplayUsername() {
+const DEFAULT_PERSPECTIVES = {
+    'Age': {
+        type: 'demographic',
+        inputType: 'date',
+        value: null,
+        categoryType: 'demographic',
+        verificationMethod: 'self-reported'
+    },
+    'Gender': {
+        type: 'demographic',
+        options: ['male', 'female', 'non-binary', 'other', 'prefer-not-to-say'],
+        categoryType: 'demographic',
+        verificationMethod: 'self-reported'
+    },
+    'Education Level': {
+        type: 'sociographic',
+        options: ['High School', 'Some College', 'Associates', 'Bachelors', 'Masters', 'Doctorate'],
+        categoryType: 'sociographic',
+        verificationMethod: 'self-reported'
+    },
+    'Industry': {
+        type: 'professional',
+        options: ['Technology', 'Healthcare', 'Finance', 'Education', 'Manufacturing', 'Retail'],
+        categoryType: 'professional',
+        verificationMethod: 'self-reported'
+    },
+    'Income Range': {
+        type: 'economic',
+        options: ['Under $30k', '$30k-$50k', '$50k-$75k', '$75k-$100k', '$100k-$150k', '$150k+'],
+        categoryType: 'economic',
+        verificationMethod: 'self-reported'
+    },
+    'Location Type': {
+        type: 'geographic',
+        options: ['Urban', 'Suburban', 'Rural'],
+        categoryType: 'geographic',
+        verificationMethod: 'self-reported'
+    }
+};
+
+async function loadPerspectives() {
     try {
-        const response = await fetch('/account/current', {
-            credentials: 'include' // include credentials to send the session cookie
+        const response = await fetch('/UserPerspective/list', {
+            credentials: 'include'
         });
-        const user = await response.json();
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        welcomeMessage.textContent = 'Welcome, ' + user.username + '!';
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-async function fetchAndDisplayPerspectives() {
-    try {
-        // Fetch the current user to get the userId
-        const userResponse = await fetch('/account/current', {
-            credentials: 'include' // include credentials to send the session cookie
-        });
-        const user = await userResponse.json();
-        const userId = user.id;
-
-        // Fetch the user's perspectives by matching UserPerspective with Perspective
-        const response = await fetch(`/UserPerspective/get_user_perspectives/${userId}`, {
-            credentials: 'include' // include credentials to send the session cookie
-        });
-        const userPerspectives = await response.json();
-        const perspectivesBody = document.getElementById('perspectivesBody');
-        perspectivesBody.innerHTML = userPerspectives.map(userPerspective => `
-            <tr>
-                <td>${userPerspective.perspectiveName}</td>
-                <td>${new Date(userPerspective.updatedAt).toLocaleString()}</td>
-                <td>${userPerspective.type}</td>
-                <td>
-                    <button onclick="showUpdateForm(${userPerspective.perspectiveId}, '${userPerspective.perspectiveName}', '${userPerspective.type}')">Update</button>
-                </td>
-            </tr>
-        `).join('');
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-const integrations = [
-    {
-        name: 'LinkedIn',
-        icon: '../assets/integrations/linkedin.svg',
-        description: 'Connect your professional network',
-        connectFunction: 'connectLinkedIn',
-        status: 'disconnected'
-    },
-    {
-        name: 'Spotify',
-        icon: '../assets/integrations/spotify.svg',
-        description: 'Connect your music preferences',
-        connectFunction: 'connectSpotify',
-        status: 'disconnected'
-    },
-    {
-        name: 'Gmail',
-        icon: '../assets/integrations/gmail.svg',
-        description: 'Connect your email activity',
-        connectFunction: 'connectGmail',
-        status: 'disconnected'
-    },
-    {
-        name: 'GitHub',
-        icon: '../assets/integrations/github.svg',
-        description: 'Connect your development activity',
-        connectFunction: 'connectGithub',
-        status: 'coming_soon'
-    },
-    {
-        name: 'Twitter',
-        icon: '../assets/integrations/twitter.svg',
-        description: 'Connect your social presence',
-        connectFunction: 'connectTwitter',
-        status: 'coming_soon'
-    },
-    {
-        name: 'Stripe',
-        icon: '../assets/integrations/stripe.svg',
-        description: 'Connect your payment history',
-        connectFunction: 'connectStripe',
-        status: 'coming_soon'
-    }
-];
-
-function renderIntegrations() {
-    const container = document.querySelector('.integrations-grid');
-    container.innerHTML = integrations.map(integration => `
-        <div class="integration-card ${integration.status === 'connected' ? 'connected' : ''}">
-            <img src="${integration.icon}" alt="${integration.name}">
-            <h3>${integration.name}</h3>
-            <p>${integration.description}</p>
-            <button 
-                onclick="${integration.status !== 'coming_soon' ? integration.connectFunction + '()' : ''}"
-                ${integration.status === 'coming_soon' ? 'disabled' : ''}
-            >
-                ${integration.status === 'coming_soon' ? 'Coming Soon' : 
-                  integration.status === 'connected' ? 'Connected' : 'Connect'}
-            </button>
-        </div>
-    `).join('');
-}
-
-document.addEventListener('DOMContentLoaded', async function() {
-    await fetchAndDisplayUsername();
-    await fetchAndDisplayPerspectives();
-    
-    const perspectivesTab = document.getElementById('perspectivesTab');
-    const integrationsTab = document.getElementById('integrationsTab');
-    const activityTab = document.getElementById('activityTab');
-    
-    const perspectivesContent = document.getElementById('perspectivesContent');
-    const integrationsContent = document.getElementById('integrationsContent');
-    const activityContent = document.getElementById('activityContent');
-
-    function switchTab(activeTab, activeContent) {
-        // Remove active class from all tabs and content
-        [perspectivesTab, integrationsTab, activityTab].forEach(tab => 
-            tab.classList.remove('active'));
-        [perspectivesContent, integrationsContent, activityContent].forEach(content => 
-            content.classList.remove('active'));
+        const perspectives = await response.json();
         
-        // Add active class to selected tab and content
-        activeTab.classList.add('active');
-        activeContent.classList.add('active');
-    }
-
-    perspectivesTab.addEventListener('click', () => {
-        switchTab(perspectivesTab, perspectivesContent);
-    });
-
-    integrationsTab.addEventListener('click', () => {
-        switchTab(integrationsTab, integrationsContent);
-        renderIntegrations();
-    });
-
-    activityTab.addEventListener('click', () => {
-        switchTab(activityTab, activityContent);
-        loadUserContent();
-    });
-
-    // Initial render of integrations
-    renderIntegrations();
-});
-
-// Function to update a perspective with type
-async function updatePerspective(perspectiveId, perspectiveName, perspectiveType) {
-    try {
-        const response = await fetch('/perspectives/update_perspective/' + perspectiveId, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ perspectiveName, perspectiveType }) // Ensure both name and type are included in the body
-        });
-        const data = await response.json();
-        if (data.success) {
-            // Refresh the perspectives list
-            fetchAndDisplayPerspectives();
+        const tbody = document.querySelector('#perspectivesTable tbody');
+        tbody.innerHTML = '';
+        
+        if (Array.isArray(perspectives)) {
+            perspectives.forEach(p => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${p.name || ''}</td>
+                    <td>${p.value || ''}</td>
+                    <td>${p.source || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
         } else {
-            // Display an error message
-            console.error('Error:', data.error);
+            console.error('Unexpected perspectives data:', perspectives);
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error loading perspectives:', error);
     }
 }
 
-async function loadUserContent() {
-    try {
-        const activityContent = document.getElementById('activityContent');
-        const postsSection = document.createElement('div');
-        postsSection.className = 'posts-section';
-        postsSection.innerHTML = `
-            <h2>Your Posts</h2>
-            <div class="posts-container"></div>
-            <button class="load-more-btn" id="loadMorePosts">Load More Posts</button>
-        `;
-
-        const commentsSection = document.createElement('div');
-        commentsSection.className = 'comments-section';
-        commentsSection.innerHTML = `
-            <h2>Your Comments</h2>
-            <div class="comments-container"></div>
-            <button class="load-more-btn" id="loadMoreComments">Load More Comments</button>
-        `;
-
-        // Clear existing content and append new sections
-        activityContent.querySelector('.activity-section').innerHTML = '';
-        activityContent.querySelector('.activity-section').appendChild(postsSection);
-        activityContent.querySelector('.activity-section').appendChild(commentsSection);
-
-        // Load both posts and comments initially
-        await Promise.all([
-            loadUserPosts(0),
-            loadUserComments(0)
-        ]);
-
-        // Add event listeners for load more buttons
-        document.getElementById('loadMorePosts').addEventListener('click', () => {
-            const currentPosts = document.querySelectorAll('.posts-container .profile-post').length;
-            loadUserPosts(currentPosts);
-        });
-
-        document.getElementById('loadMoreComments').addEventListener('click', () => {
-            const currentComments = document.querySelectorAll('.comments-container .profile-comment').length;
-            loadUserComments(currentComments);
-        });
-    } catch (error) {
-        console.error('Error loading user content:', error);
+function handleDateChange(name, value) {
+    if (value) {
+        const age = calculateAge(new Date(value));
+        const row = document.querySelector(`tr:has(td:first-child:contains("${name}"))`);
+        row.querySelector('.age-display').textContent = `Age: ${age}`;
+        handleChange(name, value, age);
     }
 }
 
-async function loadUserPosts(offset) {
-    const response = await fetch(`/articles/user_posts?offset=${offset}`, {
-        credentials: 'include'
-    });
-    const posts = await response.json();
-    const container = document.querySelector('.posts-container');
+function calculateAge(birthDate) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+function handleChange(name, value, age = null) {
+    console.log('Saving perspective:', name, value);
+    const data = {
+        userId: window.userId,
+        perspectiveName: name,
+        value: value,
+        type: DEFAULT_PERSPECTIVES[name].type,
+        categoryType: DEFAULT_PERSPECTIVES[name].categoryType
+    };
+    if (age !== null) {
+        data.age = age;
+    }
     
-    posts.forEach(post => {
-        const postElement = document.createElement('div');
-        postElement.className = 'profile-post';
-        postElement.innerHTML = `
-            <div class="post-content">
-                <div class="post-metadata">
-                    <span class="post-perspective">${post.perspectiveName}</span>
-                    <span>${new Date(post.createdAt).toLocaleDateString()}</span>
-                </div>
-                <h3 class="post-title">
-                    <a href="/post/${post.id}">${post.title}</a>
-                </h3>
-                <p>${post.content}</p>
-            </div>
-        `;
-        container.appendChild(postElement);
-    });
-}
-
-async function loadUserComments(offset) {
-    const response = await fetch(`/comments/get_user_comments?offset=${offset}&limit=10`, {
+    fetch('/UserPerspective/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
         credentials: 'include'
-    });
-    const comments = await response.json();
-    const container = document.querySelector('.comments-container');
-    
-    comments.forEach(comment => {
-        const commentElement = document.createElement('div');
-        commentElement.className = 'profile-comment';
-        commentElement.innerHTML = `
-            <div class="comment-content">
-                <div class="comment-metadata">
-                    <span class="comment-perspective">${comment.Perspective?.perspectiveName || 'Unknown'}</span>
-                    <span>${new Date(comment.createdAt).toLocaleDateString()}</span>
-                </div>
-                <p>${comment.text}</p>
-                <a href="/post/${comment.article?.id || '#'}">View Post</a>
-            </div>
-        `;
-        container.appendChild(commentElement);
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            const row = document.querySelector(`tr:has(td:first-child:contains("${name}"))`);
+            if (row) {
+                const statusEl = row.querySelector('.status');
+                if (statusEl) {
+                    statusEl.textContent = 'Saved';
+                    // Add visual feedback
+                    statusEl.style.color = 'green';
+                    setTimeout(() => {
+                        statusEl.style.color = '';
+                    }, 2000);
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error updating perspective:', error);
+        // Show error to user
+        const row = document.querySelector(`tr:has(td:first-child:contains("${name}"))`);
+        if (row) {
+            const statusEl = row.querySelector('.status');
+            if (statusEl) {
+                statusEl.textContent = 'Error saving';
+                statusEl.style.color = 'red';
+            }
+        }
     });
 }
 
-// Show the update form with the current perspective name and type
-function showUpdateForm(perspectiveId, name, type) {
-    const updateIdElement = document.getElementById('updatePerspectiveId');
-    const updateNameElement = document.getElementById('updatePerspectiveName');
-    const typeDropdown = document.getElementById('updatePerspectiveType');
+document.addEventListener('DOMContentLoaded', async () => {
+    // ... existing initialization code ...
 
-    if (updateIdElement && updateNameElement && typeDropdown) {
-        updateIdElement.value = perspectiveId;
-        updateNameElement.value = name;
-        // Ensure the dropdown is set to the correct value
-        typeDropdown.value = type; // This should correctly set the dropdown to the current type
-
-        document.getElementById('updatePerspectiveForm').style.display = 'block';
-    } else {
-        console.error('One or more elements do not exist in the DOM.');
-    }
-}
-
-// Create perspective Dropdown menu
-function createDropdown(options, dropdownId) {
-    const select = document.createElement('select');
-    select.id = dropdownId;
-    select.name = dropdownId;
-  
-    options.forEach(option => {
-      const optionElement = document.createElement('option');
-      optionElement.value = option;
-      optionElement.textContent = option.charAt(0).toUpperCase() + option.slice(1); // Capitalize the first letter
-      select.appendChild(optionElement);
+    // Add tab handling for all tabs
+    document.getElementById('perspectivesTab').addEventListener('click', function() {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+        document.getElementById('perspectivesContent').classList.add('active');
+        this.classList.add('active');
     });
-  
-    return select;
-  }
-  
-  // Assuming 'perspectiveTypes' is an array of perspective types and 'perspectiveTypeDropdown' is the ID of the div where the dropdown should be appended
-  document.addEventListener('DOMContentLoaded', () => {
-    const dropdown = createDropdown(perspectiveTypes, 'updatePerspectiveType');
-    document.getElementById('perspectiveTypeDropdown').appendChild(dropdown);
-  });
 
-// Handle the update form submission
-document.getElementById('updatePerspectiveForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+    document.getElementById('profileTab').addEventListener('click', function() {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+        document.getElementById('profileContent').classList.add('active');
+        this.classList.add('active');
+    });
 
-    const perspectiveId = document.getElementById('updatePerspectiveId').value;
-    const name = document.getElementById('updatePerspectiveName').value;
-    const type = document.getElementById('updatePerspectiveType').value; // Get the selected type from the dropdown
+    document.getElementById('activityTab').addEventListener('click', function() {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+        document.getElementById('activityContent').classList.add('active');
+        this.classList.add('active');
+    });
 
-    if (!perspectiveId) {
-        console.error('Error: Perspective ID is undefined');
-        return;
-    }
+    document.getElementById('integrationsTab').addEventListener('click', function() {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+        document.getElementById('integrationsContent').classList.add('active');
+        this.classList.add('active');
+    });
 
-    updatePerspective(perspectiveId, name, type); // Pass the type to the update function
+    // Load user profile
+    await loadUserProfile();
+
+    loadPerspectives();
 });
-document.getElementById('addPerspectiveButton').addEventListener('click', async function() {
-    const perspectivesTable = document.getElementById('perspectivesTable');
-    const row = perspectivesTable.insertRow();
 
-    // Create a cell for the perspective type dropdown
-    const typeCell = row.insertCell();
-    const typeSelect = document.createElement('select');
-    typeCell.appendChild(typeSelect);
-
-    // Fetch and populate perspective types
+async function loadUserProfile() {
     try {
-        const response = await fetch('/perspectives/get_all_perspectives');
-        const perspectiveTypes = await response.json();
-        perspectiveTypes.forEach(type => {
-            const option = document.createElement('option');
-            option.value = type.perspectiveId; // Assuming each type has a unique ID
-            option.textContent = type.perspectiveName; // Assuming the name of the perspective type is what you want to display
-            typeSelect.appendChild(option);
+        const response = await fetch('/account/profile', {
+            credentials: 'include'
+        });
+        const profile = await response.json();
+        
+        // Set values and lock fields if they exist
+        const fields = {
+            'primaryEmail': profile.email,
+            'phoneNumber': profile.phoneNumber,
+            'birthDate': profile.birthDate,
+            'gender': profile.gender,
+            'politicalAffiliation': profile.politicalAffiliation,
+            'maritalStatus': profile.maritalStatus,
+            'numberOfChildren': profile.numberOfChildren,
+            'city': profile.address?.city,
+            'state': profile.address?.state,
+            'zipCode': profile.address?.zipCode,
+            'hsGraduated': profile.education?.highSchool?.graduated,
+            'hsName': profile.education?.highSchool?.schoolName,
+            'hsYear': profile.education?.highSchool?.graduationYear,
+            'ugGraduated': profile.education?.undergraduate?.graduated,
+            'ugName': profile.education?.undergraduate?.schoolName,
+            'ugYear': profile.education?.undergraduate?.graduationYear,
+            'ugDegree': profile.education?.undergraduate?.degree,
+            'ugMajor': profile.education?.undergraduate?.major,
+            'gradGraduated': profile.education?.graduate?.graduated,
+            'gradName': profile.education?.graduate?.schoolName,
+            'gradYear': profile.education?.graduate?.graduationYear,
+            'gradDegree': profile.education?.graduate?.degree,
+            'gradField': profile.education?.graduate?.field
+        };
+
+        for (const [id, value] of Object.entries(fields)) {
+            const field = document.getElementById(id);
+            if (field && value) {
+                field.value = id === 'birthDate' ? new Date(value).toISOString().split('T')[0] : value;
+                field.readOnly = true;
+                if (id === 'gender') {
+                    field.disabled = true;
+                } else {
+                    field.classList.add('readonly-input');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
+
+// Add form submission handler
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        phoneNumber: document.getElementById('phoneNumber').value,
+        birthDate: document.getElementById('birthDate').value,
+        gender: document.getElementById('gender').value,
+        politicalAffiliation: document.getElementById('politicalAffiliation').value,
+        maritalStatus: document.getElementById('maritalStatus').value,
+        numberOfChildren: parseInt(document.getElementById('numberOfChildren').value) || 0,
+        education: {
+            highSchool: {
+                graduated: document.getElementById('hsGraduated').checked,
+                schoolName: document.getElementById('hsName').value,
+                graduationYear: parseInt(document.getElementById('hsYear').value) || null
+            },
+            undergraduate: {
+                graduated: document.getElementById('ugGraduated').checked,
+                schoolName: document.getElementById('ugName').value,
+                graduationYear: parseInt(document.getElementById('ugYear').value) || null,
+                degree: document.getElementById('ugDegree').value,
+                major: document.getElementById('ugMajor').value
+            },
+            graduate: {
+                graduated: document.getElementById('gradGraduated').checked,
+                schoolName: document.getElementById('gradName').value,
+                graduationYear: parseInt(document.getElementById('gradYear').value) || null,
+                degree: document.getElementById('gradDegree').value,
+                field: document.getElementById('gradField').value
+            }
+        },
+        address: {
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value,
+            zipCode: document.getElementById('zipCode').value,
+            country: 'United States'
+        }
+    };
+
+    await saveProfile(formData);
+});
+
+async function loadEmails() {
+    try {
+        const response = await fetch('/account/emails', {
+            credentials: 'include'
+        });
+        const emails = await response.json();
+        
+        const emailsList = document.getElementById('emailsList');
+        emailsList.innerHTML = '';
+        
+        emails.forEach(email => {
+            const emailEntry = document.createElement('div');
+            emailEntry.className = `email-entry ${email.isPrimary ? 'primary' : ''}`;
+            
+            emailEntry.innerHTML = `
+                <span class="email-text">${email.email}</span>
+                <span class="verification-badge ${email.isVerified ? 'verified' : ''}">
+                    ${email.isVerified ? 'Verified' : 'Pending'}
+                </span>
+                ${email.isPrimary ? '<span class="primary-badge">Primary</span>' : ''}
+            `;
+            
+            emailsList.appendChild(emailEntry);
         });
     } catch (error) {
-        console.error('Error fetching perspective types:', error);
+        console.error('Error loading emails:', error);
     }
+}
 
-    // Create a cell for the "Save" button
-    const saveCell = row.insertCell();
-    const saveButton = document.createElement('button');
-    saveButton.textContent = 'Save';
-    saveButton.addEventListener('click', async function() {
-        const selectedPerspectiveId = typeSelect.value; // Get the selected perspective type
-
-        // Fetch the current user to get the userId
-        const userResponse = await fetch('/account/current', {
-            credentials: 'include' // include credentials to send the session cookie
-        });
-        const user = await userResponse.json();
-        const userId = user.id;
-
-        // Add the new perspective to the database
-        const response = await fetch('/UserPerspective/add_user_perspective', {
+document.getElementById('addEmailBtn').addEventListener('click', async () => {
+    const newEmail = document.getElementById('newEmail').value.trim();
+    if (!newEmail) return;
+    
+    try {
+        const response = await fetch('/account/add-email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ perspectiveId: selectedPerspectiveId, userId }) // Include userId and selected perspective type here
+            credentials: 'include',
+            body: JSON.stringify({ email: newEmail })
         });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Refresh the perspectives list
-            fetchAndDisplayPerspectives();
+        
+        if (response.ok) {
+            document.getElementById('newEmail').value = '';
+            await loadEmails();
         } else {
-            // Display an error message
-            console.error('Error:', data.error);
+            const error = await response.json();
+            alert(error.error || 'Failed to add email');
         }
-    });
-    saveCell.appendChild(saveButton);
+    } catch (error) {
+        console.error('Error adding email:', error);
+        alert('Failed to add email');
+    }
 });
 
-async function connectSpotify() {
+document.addEventListener('DOMContentLoaded', () => {
+    loadEmails();
+    // ... existing code ...
+});
+
+async function generatePerspectives() {
     try {
-        // Get Spotify auth parameters
-        const response = await fetch('/spotify/auth-params');
-        const { clientId, redirectUri, scope } = await response.json();
-        
-        // Generate random state
-        const state = Math.random().toString(36).substring(7);
-        
-        // Build authorization URL
-        const authUrl = new URL('https://accounts.spotify.com/authorize');
-        authUrl.searchParams.append('client_id', clientId);
-        authUrl.searchParams.append('response_type', 'token');
-        authUrl.searchParams.append('redirect_uri', redirectUri);
-        authUrl.searchParams.append('scope', scope);
-        authUrl.searchParams.append('state', state);
-        
-        // Open Spotify auth in popup
-        const width = 450;
-        const height = 730;
-        const left = (window.screen.width / 2) - (width / 2);
-        const top = (window.screen.height / 2) - (height / 2);
-        
-        window.open(
-            authUrl.toString(),
-            'Spotify Login',
-            `width=${width},height=${height},left=${left},top=${top}`
-        );
-        
-        // Handle the callback
-        window.spotifyCallback = async (hash) => {
-            const params = new URLSearchParams(hash.substring(1));
-            const accessToken = params.get('access_token');
-            
-            if (accessToken) {
-                const userId = await getCurrentUserId();
-                const response = await fetch('/spotify/generate-perspectives', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ userId, accessToken }),
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        alert('Spotify perspectives generated successfully!');
-                        loadUserPerspectives();
-                    }
-                }
-            }
-        };
-    } catch (error) {
-        console.error('Error connecting to Spotify:', error);
-        alert('Failed to connect to Spotify');
-    }
-}
+        console.log('Starting perspective generation');
+        const profileResponse = await fetch('/account/profile', {
+            credentials: 'include'
+        });
+        const profile = await profileResponse.json();
+        console.log('Profile data in generate:', profile);
 
-async function getCurrentUserId() {
-    const response = await fetch('/account/current', {
-        credentials: 'include'
-    });
-    const user = await response.json();
-    return user.id;
-}
+        const perspectives = [];
 
-async function connectGmail() {
-    try {
-        const response = await fetch('/gmail/auth-params');
-        const { clientId, redirectUri, scope } = await response.json();
-        
-        const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-        const params = {
-            client_id: clientId,
-            redirect_uri: redirectUri,
-            response_type: 'code',
-            scope: scope,
-            access_type: 'offline',
-            prompt: 'consent'
-        };
+        // Political Affiliation perspective
+        if (profile.politicalAffiliation) {
+            console.log('Adding political perspective:', profile.politicalAffiliation);
+            perspectives.push({
+                name: 'Political Affiliation',
+                value: profile.politicalAffiliation,
+                type: 'demographic',
+                categoryType: 'demographic',
+                source: 'profile'
+            });
+        }
 
-        Object.keys(params).forEach(key => 
-            authUrl.searchParams.append(key, params[key])
-        );
+        // Marital Status perspective
+        if (profile.maritalStatus) {
+            perspectives.push({
+                name: 'Marital Status',
+                value: profile.maritalStatus,
+                type: 'demographic',
+                categoryType: 'demographic',
+                source: 'profile'
+            });
+        }
 
-        // Open in popup
-        const width = 600;
-        const height = 700;
-        const left = (window.screen.width / 2) - (width / 2);
-        const top = (window.screen.height / 2) - (height / 2);
+        // Parent Status perspective
+        if (profile.numberOfChildren !== undefined) {
+            perspectives.push({
+                name: 'Parent Status',
+                value: profile.numberOfChildren > 0 ? `Parent of ${profile.numberOfChildren}` : 'Not a Parent',
+                type: 'demographic',
+                categoryType: 'demographic',
+                source: 'profile'
+            });
+        }
 
-        window.open(
-            authUrl.toString(),
-            'Gmail Login',
-            `width=${width},height=${height},left=${left},top=${top}`
-        );
-    } catch (error) {
-        console.error('Error connecting to Gmail:', error);
-        alert('Failed to connect to Gmail: ' + error.message);
-    }
-}
+        // High School Alumni
+        if (profile.education?.highSchool?.graduated) {
+            perspectives.push({
+                name: `${profile.education.highSchool.schoolName} Alumni`,
+                value: `High School Class of ${profile.education.highSchool.graduationYear}`,
+                type: 'education',
+                categoryType: 'sociographic',
+                source: 'profile'
+            });
+        }
 
-window.gmailCallback = async (searchParams) => {
-    const params = new URLSearchParams(searchParams);
-    const code = params.get('code');
-    
-    if (code) {
-        try {
-            console.log('Exchanging code for token...');
-            const response = await fetch('/gmail/token', {
+        // Undergraduate Alumni
+        if (profile.education?.undergraduate?.graduated) {
+            perspectives.push({
+                name: `${profile.education.undergraduate.schoolName} Alumni`,
+                value: `${profile.education.undergraduate.degree} in ${profile.education.undergraduate.major}, Class of ${profile.education.undergraduate.graduationYear}`,
+                type: 'education',
+                categoryType: 'sociographic',
+                source: 'profile'
+            });
+        }
+
+        // Graduate Alumni
+        if (profile.education?.graduate?.graduated) {
+            perspectives.push({
+                name: `${profile.education.graduate.schoolName} Alumni`,
+                value: `${profile.education.graduate.degree} in ${profile.education.graduate.field}, Class of ${profile.education.graduate.graduationYear}`,
+                type: 'education',
+                categoryType: 'sociographic',
+                source: 'profile'
+            });
+        }
+
+        console.log('Perspectives to send:', perspectives);
+
+        if (perspectives.length > 0) {
+            const response = await fetch('/UserPerspective/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ code }),
-                credentials: 'include'
+                credentials: 'include',
+                body: JSON.stringify({ perspectives })
             });
 
-            const data = await response.json();
-            console.log('Token exchange response:', data);
-
-            if (response.ok && data.success) {
-                // Verify connection before redirecting
-                const statusCheck = await fetch('/gmail/status', {
-                    credentials: 'include'
-                });
-                const { connected } = await statusCheck.json();
-
-                if (connected) {
-                    window.location.href = '/account/gmail-manager.html';
-                } else {
-                    throw new Error('Failed to verify Gmail connection');
-                }
-            } else {
-                throw new Error(data.error || 'Failed to connect Gmail');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to connect Gmail: ' + error.message);
+            const result = await response.json();
+            console.log('Generation response:', result);
         }
+    } catch (error) {
+        console.error('Error generating perspectives:', error);
     }
-};
-
-async function loadUserPosts(offset) {
-    const response = await fetch(`/articles/user_posts?offset=${offset}&limit=10`, {
-        credentials: 'include'
-    });
-    const posts = await response.json();
-    const container = document.querySelector('.posts-container');
-    
-    posts.forEach(post => {
-        const postElement = document.createElement('div');
-        postElement.className = 'profile-post';
-        postElement.innerHTML = `
-            <div class="post-content">
-                <div class="post-metadata">
-                    <span class="post-perspective">${post.Perspective?.perspectiveName || 'Unknown'}</span>
-                    <span>${new Date(post.createdAt).toLocaleDateString()}</span>
-                </div>
-                <h3 class="post-title">
-                    <a href="/post/${post.id}">${post.title}</a>
-                </h3>
-                <p>${post.content || ''}</p>
-            </div>
-        `;
-        container.appendChild(postElement);
-    });
 }
 
-async function connectLinkedIn() {
+// Add event listener
+document.getElementById('generatePerspectivesBtn').addEventListener('click', generatePerspectives);
+
+async function saveProfile(formData) {
     try {
-        const width = 450;
-        const height = 730;
-        const left = (window.screen.width / 2) - (width / 2);
-        const top = (window.screen.height / 2) - (height / 2);
+        console.log('Form data being sent:', formData);
+        const response = await fetch('/account/profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+        });
         
-        window.open(
-            '/auth/linkedin',
-            'LinkedIn Login',
-            `width=${width},height=${height},left=${left},top=${top}`
-        );
+        const result = await response.json();
+        console.log('Save profile response:', result);
+        
+        await generatePerspectives();
     } catch (error) {
-        console.error('Error connecting to LinkedIn:', error);
-        alert('Failed to connect to LinkedIn');
+        console.error('Error saving profile:', error);
+    }
+}
+
+function connectLinkedIn() {
+    // Simulate token generation and data saving
+    const token = 'simulated-linkedin-token';
+    const data = {
+        status: 'Connected',
+        lastSynced: new Date().toLocaleString()
+    };
+
+    // Save token and data (simulated)
+    console.log('LinkedIn token:', token);
+    console.log('LinkedIn data:', data);
+
+    // Update UI
+    document.getElementById('linkedinStatus').textContent = data.status;
+    document.getElementById('linkedinLastSynced').textContent = data.lastSynced;
+}
+
+function connectInstagram() {
+    // Simulate token generation and data saving
+    const token = 'simulated-instagram-token';
+    const data = {
+        status: 'Connected',
+        lastSynced: new Date().toLocaleString()
+    };
+
+    // Save token and data (simulated)
+    console.log('Instagram token:', token);
+    console.log('Instagram data:', data);
+
+    // Update UI
+    document.getElementById('instagramStatus').textContent = data.status;
+    document.getElementById('instagramLastSynced').textContent = data.lastSynced;
+}
+
+function connectFacebook() {
+    // Simulate token generation and data saving
+    const token = 'simulated-facebook-token';
+    const data = {
+        status: 'Connected',
+        lastSynced: new Date().toLocaleString()
+    };
+
+    // Save token and data (simulated)
+    console.log('Facebook token:', token);
+    console.log('Facebook data:', data);
+
+    // Update UI
+    document.getElementById('facebookStatus').textContent = data.status;
+    document.getElementById('facebookLastSynced').textContent = data.lastSynced;
+}
+
+function connectIdMe() {
+    // Redirect to ID.me authentication
+    const idmeUrl = 'https://groups.id.me/?client_id=YOUR_CLIENT_ID&redirect_uri=https://marginalperspective.com/idme/callback&response_type=code&scope=openid';
+    window.location.href = idmeUrl;
+}
+
+// Function to handle ID.me callback and update UI
+async function handleIdMeCallback() {
+    try {
+        const response = await fetch('/idme/callback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            document.getElementById('idmeStatus').textContent = 'Connected';
+            document.getElementById('idmeLastSynced').textContent = new Date().toLocaleString();
+        }
+    } catch (error) {
+        console.error('Error handling ID.me callback:', error);
     }
 }
 

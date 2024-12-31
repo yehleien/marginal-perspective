@@ -1,32 +1,39 @@
+let currentIndex = 0;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    await fetchAndDisplayTrendingNametags();
+    setupScopeFilters();
     fetchAndDisplayPosts();
 });
 
-async function fetchAndDisplayTrendingNametags() {
-    try {
-        const response = await fetch('/perspectives/get_random_perspectives?limit=5', {
-            credentials: 'include'
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const randomPerspectives = await response.json();
-        const nametagsBody = document.getElementById('trendingNametagsBody');
-        nametagsBody.innerHTML = randomPerspectives.map(perspective => `
-            <tr>
-                <td>${perspective.perspectiveName}</td>
-            </tr>
-        `).join('');
-    } catch (error) {
-        console.error('Error:', error);
-    }
+function setupScopeFilters() {
+    const validScopes = ['All', 'News', 'Politics', 'Healthcare', 'Sports', 'Technology', 'Entertainment', 'Business', 'Science'];
+    const filtersContainer = document.getElementById('trendingNametagsBody');
+    filtersContainer.innerHTML = '';
+
+    validScopes.forEach(scope => {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        const button = document.createElement('button');
+        button.className = 'scope-filter-button' + (scope === 'All' ? ' active' : '');
+        button.textContent = scope;
+        button.onclick = () => {
+            document.querySelectorAll('.scope-filter-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            currentIndex = 0;
+            fetchAndDisplayPosts(scope.toLowerCase());
+        };
+        cell.appendChild(button);
+        row.appendChild(cell);
+        filtersContainer.appendChild(row);
+    });
 }
 
-let currentIndex = 0;
+function fetchAndDisplayPosts(scope = 'all') {
+    const url = scope === 'all' 
+        ? `/articles/get_latest?index=${currentIndex}` 
+        : `/articles/get_latest?index=${currentIndex}&scope=${scope}`;
 
-function fetchAndDisplayPosts(sort = 'top') {
-    fetch(`/articles/get_latest?index=${currentIndex}&sort=${sort}`)
+    fetch(url)
         .then(response => response.json())
         .then(articles => {
             if (articles.length === 0) {
@@ -34,12 +41,12 @@ function fetchAndDisplayPosts(sort = 'top') {
                 return;
             }
             const mainContainer = document.getElementById('mainContainer');
-            mainContainer.innerHTML = ''; // Clear previous posts
+            mainContainer.innerHTML = '';
             articles.forEach(article => {
                 const postElement = createPostElement(article);
                 mainContainer.appendChild(postElement);
             });
-            currentIndex += articles.length; // Prepare for the next load
+            currentIndex += articles.length;
         })
         .catch(error => console.error('Error fetching posts:', error));
 }
@@ -52,45 +59,132 @@ function createPostElement(post) {
     voteContainer.classList.add('vote-container');
     postElement.appendChild(voteContainer);
 
-    // Remove event listener from the parent container
-    postElement.addEventListener('click', () => {
-        // Handle post click event
-    });
-
     const contentContainer = document.createElement('div');
     contentContainer.classList.add('content-container');
 
+    // Post metadata line
+    const metaContainer = document.createElement('div');
+    metaContainer.classList.add('post-meta');
+    
+    if (post.scope) {
+        const scope = document.createElement('span');
+        scope.classList.add('post-scope');
+        scope.textContent = post.scope.charAt(0).toUpperCase() + post.scope.slice(1);
+        metaContainer.appendChild(scope);
+    }
+
+    const postInfo = document.createElement('span');
+    postInfo.classList.add('post-info');
+    const date = new Date(post.submitDate).toLocaleDateString();
+    postInfo.textContent = `Posted ${date}`;
+    metaContainer.appendChild(postInfo);
+
+    // Add source info if URL exists
+    if (post.url) {
+        const sourceContainer = document.createElement('div');
+        sourceContainer.classList.add('source-info');
+        
+        try {
+            const url = new URL(post.url);
+            const domain = url.hostname.replace('www.', '');
+            
+            const favicon = document.createElement('img');
+            favicon.className = 'source-favicon';
+            favicon.src = `https://www.google.com/s2/favicons?domain=${domain}`;
+            favicon.alt = domain;
+            sourceContainer.appendChild(favicon);
+
+            const sourceText = document.createElement('span');
+            sourceText.className = 'source-domain';
+            sourceText.textContent = domain;
+            sourceContainer.appendChild(sourceText);
+
+            // Add media bias info
+            fetch(`/articles/media_bias/${domain}`)
+                .then(response => response.json())
+                .then(biasInfo => {
+                    if (biasInfo.bias !== 'Unknown') {
+                        const biasContainer = document.createElement('div');
+                        biasContainer.className = 'bias-info';
+                        
+                        const biasIndicator = document.createElement('span');
+                        biasIndicator.className = `bias-indicator bias-${biasInfo.bias.toLowerCase().replace(/\s+/g, '-')}`;
+                        biasIndicator.title = `Bias: ${biasInfo.bias}, Fact Rating: ${biasInfo.factRating}`;
+                        biasIndicator.textContent = '•';
+                        biasContainer.appendChild(biasIndicator);
+
+                        sourceContainer.appendChild(biasContainer);
+                    }
+                })
+                .catch(error => console.error('Error fetching bias info:', error));
+
+            metaContainer.appendChild(sourceContainer);
+        } catch (e) {
+            console.error('Invalid URL:', post.url);
+        }
+    }
+
+    contentContainer.appendChild(metaContainer);
+
+    // Title
     const title = document.createElement('h3');
+    title.classList.add('post-title');
     title.textContent = post.title;
     contentContainer.appendChild(title);
 
-    const content = document.createElement('p');
-    content.textContent = post.content;
-    contentContainer.appendChild(content);
+    // Content preview
+    if (post.content) {
+        const content = document.createElement('p');
+        content.classList.add('post-content-preview');
+        content.textContent = post.content;
+        contentContainer.appendChild(content);
+    }
 
-    postElement.appendChild(contentContainer);
+    // Bottom metadata (comments count)
+    const bottomMeta = document.createElement('div');
+    bottomMeta.classList.add('post-bottom-meta');
 
-    const infoContainer = document.createElement('div');
-    infoContainer.classList.add('info-container');
+    // Create container for comment count and perspectives
+    const commentContainer = document.createElement('div');
+    commentContainer.classList.add('comment-info');
 
-    // Fetch comment count and append to infoContainer as before
+    // Fetch and add comment count
     fetch(`/comments/commentCount/${post.id}`)
         .then(response => response.json())
         .then(data => {
             const commentCount = document.createElement('span');
-            commentCount.textContent = `Comments: ${data.commentCount}`;
-            infoContainer.appendChild(commentCount);
+            commentCount.classList.add('comment-count');
+            commentCount.textContent = `${data.commentCount} comments`;
+            commentContainer.appendChild(commentCount);
         })
         .catch(error => console.error('Error fetching comment count:', error));
 
-    const submitDate = document.createElement('span');
-    submitDate.textContent = ` ${new Date(post.submitDate).toLocaleDateString()}`;
-    infoContainer.appendChild(submitDate);
+    // Fetch and add top perspectives
+    fetch(`/articles/top_perspectives/${post.id}`)
+        .then(response => response.json())
+        .then(perspectives => {
+            if (perspectives.length > 0) {
+                const perspectivesContainer = document.createElement('div');
+                perspectivesContainer.classList.add('top-perspectives');
+                
+                perspectives.forEach(p => {
+                    const badge = document.createElement('span');
+                    badge.classList.add('perspective-badge');
+                    badge.textContent = `${p.perspectiveName} (${p.count})`;
+                    perspectivesContainer.appendChild(badge);
+                });
+                
+                commentContainer.appendChild(perspectivesContainer);
+            }
+        })
+        .catch(error => console.error('Error fetching perspectives:', error));
 
-    postElement.appendChild(infoContainer);
+    bottomMeta.appendChild(commentContainer);
+    contentContainer.appendChild(bottomMeta);
+    postElement.appendChild(contentContainer);
 
     postElement.addEventListener('click', () => {
-        window.location.href = `/postDetails.html?postId=${post.id}`; // Navigate to post details page
+        window.location.href = `/postDetails.html?postId=${post.id}`;
     });
 
     return postElement;

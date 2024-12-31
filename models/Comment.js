@@ -58,6 +58,18 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'commentId',
       as: 'votes'
     });
+    Comment.hasOne(models.UserPerspective, {
+      foreignKey: 'userId',
+      sourceKey: 'userId',
+      constraints: false,
+      scope: {
+        perspectiveId: sequelize.where(
+          sequelize.col('Comment.perspectiveId'),
+          '=',
+          sequelize.col('UserPerspective.perspectiveId')
+        )
+      }
+    });
   };
   return Comment;
 };

@@ -2,40 +2,50 @@ const { Perspective, UserPerspective, sequelize } = require('../../models');
 
 async function generateLinkedInPerspectives(userId, accessToken) {
     try {
-        const userResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
+        const response = await fetch('https://api.linkedin.com/rest/memberSnapshotData', {
             headers: {
-                'Authorization': `Bearer ${accessToken}`
+                'Authorization': `Bearer ${accessToken}`,
+                'LinkedIn-Version': '202312',
+                'Content-Type': 'application/json'
             }
         });
 
-        const userData = await userResponse.json();
+        const data = await response.json();
+        const perspectives = [];
 
-        // Get the next available ID
-        const [result] = await sequelize.query(
-            'SELECT MAX("perspectiveId") + 1 as next_id FROM "Perspectives"'
-        );
-        const nextId = result[0].next_id || 1;
+        // Process each domain's data
+        for (const element of data.elements) {
+            if (element.snapshotDomain === 'PROFILE') {
+                // Create perspective from profile data
+                const profile = element.snapshotData[0];
+                if (profile.Headline) {
+                    const perspective = await Perspective.create({
+                        perspectiveName: profile.Headline,
+                        type: 'professional_experience',
+                        categoryType: 'professional',
+                        verificationMethod: 'professional_network',
+                        verificationStatus: 'verified',
+                        verificationDate: new Date(),
+                        metadata: {
+                            industry: profile.Industry,
+                            location: profile['Geo Location'],
+                            source: 'linkedin'
+                        }
+                    });
 
-        const perspective = await Perspective.create({
-            perspectiveId: nextId,
-            perspectiveName: `${userData.given_name} ${userData.family_name} - Professional`,
-            categoryType: 'professional',
-            userId,
-            verificationMethod: 'professional_network',
-            verificationStatus: 'verified',
-            verificationDate: new Date(),
-            organization: userData.headline || 'Professional',
-            activityScore: 0
-        });
+                    await UserPerspective.create({
+                        userId,
+                        perspectiveId: perspective.perspectiveId
+                    });
 
-        await UserPerspective.create({
-            userId,
-            perspectiveId: perspective.perspectiveId
-        });
+                    perspectives.push(perspective);
+                }
+            }
+        }
 
-        return perspective;
+        return perspectives;
     } catch (error) {
-        console.error('Error generating LinkedIn perspective:', error);
+        console.error('Error generating LinkedIn perspectives:', error);
         throw error;
     }
 }

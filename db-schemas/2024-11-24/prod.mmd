@@ -1,0 +1,112 @@
+erDiagram
+    _migration_internal_statements {
+        bigint statement_order PK
+        uuid statement_id
+        string data
+    }
+    Articles {
+        integer id PK
+        string url
+        date submitDate
+        string type
+        string scope
+        string content
+        integer perspectiveId FK
+        bigint userId FK
+    }
+    Comments {
+        integer id PK
+        string text
+        integer userId FK
+        integer articleId FK
+        integer perspectiveId FK
+        integer upvotes
+        integer downvotes
+        integer parentID
+        integer replyCount
+        date createdAt
+        date updatedAt
+    }
+    Perspectives {
+        integer perspectiveId PK
+        integer userId FK
+        string perspectiveName
+        date createdAt
+        date updatedAt
+        string type
+        string options
+        string verificationMethod
+        float activityScore
+        date verificationDate
+    }
+    Sessions {
+        string sid PK
+        date expires
+        string data
+        date createdAt
+        date updatedAt
+    }
+    UserPerspective {
+        integer userId
+        integer perspectiveId
+        bigint rowid PK
+    }
+    UserPerspectives {
+        integer id PK
+        integer userId
+        integer perspectiveId
+    }
+    Users {
+        integer id PK
+        string email
+        string password
+        string username
+        date createdAt
+        date updatedAt
+    }
+    Vote {
+        integer id PK
+        integer user_id FK
+        integer comment_id FK
+        boolean is_upvote
+        boolean is_article_vote
+        integer article_id
+    }
+    SequelizeMeta {
+        string name PK
+    }
+    Votes {
+        bigint id PK
+        bigint articleId
+        bigint userId
+        boolean is_upvote
+        boolean is_article_vote
+        date createdAt
+        date updatedAt
+    }
+    CommunityPosts {
+        bigint id PK
+        string content
+        bigint perspectiveId FK
+        date createdAt
+        date updatedAt
+    }
+    GmailTokens {
+        bigint id PK
+        bigint userId FK
+        string accessToken
+        string refreshToken
+        date expiresAt
+        date createdAt
+        date updatedAt
+    }
+    Perspectives ||--o{ Articles : has
+    Users ||--o{ Articles : has
+    Articles ||--o{ Comments : has
+    Perspectives ||--o{ Comments : has
+    Users ||--o{ Comments : has
+    Users ||--o{ Perspectives : has
+    Comments ||--o{ Vote : has
+    Users ||--o{ Vote : has
+    Perspectives ||--o{ CommunityPosts : has
+    Users ||--o{ GmailTokens : has

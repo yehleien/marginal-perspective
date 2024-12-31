@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="home.css">
     <link rel="stylesheet" href="post.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 
 </head>
@@ -38,8 +38,39 @@
     </div>
 
     <!-- This will be initially hidden and will be placed in the main container -->
-    <div id="mainContainer"> 
-
+    <div id="mainContainer">
+        <div id="postsContainer">
+            {{#each posts}}
+            <div class="post" data-post-id="{{this.id}}">
+                <div class="left-container">
+                    <div class="vote-container">
+                        <button class="vote-button upvote" onclick="handleVote('{{this.id}}', 'up')">▲</button>
+                        <span class="vote-count">{{this.voteCount}}</span>
+                        <button class="vote-button downvote" onclick="handleVote('{{this.id}}', 'down')">▼</button>
+                    </div>
+                </div>
+                <div class="content-container">
+                    <div class="post-header">
+                        <span class="post-metadata">
+                            {{#if this.perspective}}
+                            <span class="post-perspective">{{this.perspective}}</span>
+                            {{/if}}
+                            Posted by {{this.author}}
+                        </span>
+                        <div class="post-info">
+                            <span class="post-date">{{formatDate this.createdAt}}</span>
+                            <div class="comment-count">
+                                <i class="fas fa-comment"></i>
+                                {{this.commentCount}} comments
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="post-title">
+                        <a href="/post/{{this.id}}">{{this.title}}</a>
+                    </h3>
+                </div>
+            </div>
+            {{/each}}
         </div>
     </div>
     <script src="home.js"></script>

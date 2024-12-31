@@ -1,57 +1,44 @@
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-  const Article = sequelize.define('Article', {
+  class Article extends Model {
+    static associate(models) {
+      Article.belongsTo(models.Perspective, {
+        foreignKey: 'perspectiveId',
+        targetKey: 'perspectiveId',
+        as: 'Perspective'
+      });
+    }
+  }
+
+  Article.init({
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: true
     },
-    url: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isUrl: true // Ensure that the URL is valid
+    url: DataTypes.STRING,
+    title: DataTypes.STRING,
+    content: DataTypes.TEXT,
+    submitDate: DataTypes.DATE,
+    scope: DataTypes.STRING,
+    perspectiveId: {
+      type: DataTypes.BIGINT,
+      references: {
+        model: 'Perspectives',
+        key: 'perspectiveId'
       }
     },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    submitDate: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW // Set default value to current date/time
-    },
-    type: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'webpage'
-    },
-    scope: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'webpage'
-    },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false
-        },
-    perspectiveId: {
+    userId: {
       type: DataTypes.INTEGER,
-      allowNull: false    
+      allowNull: true
     }
   }, {
-    timestamps: false, // Disable automatic timestamp fields (createdAt, updatedAt)
+    sequelize,
+    modelName: 'Article',
+    tableName: 'Articles',
+    timestamps: false
   });
-
-  Article.associate = function(models) {
-    Article.hasMany(models.Comment, {
-      foreignKey: 'articleId',
-      as: 'comments',
-    });
-    // Inside your model definition or a separate association file
-Article.belongsTo(models.Perspective, {foreignKey: 'perspectiveId'});
-models.Perspective.hasMany(Article, {foreignKey: 'perspectiveId'});
-  };
 
   return Article;
 };

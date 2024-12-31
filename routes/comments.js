@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { Comment, User, Perspective, Article, Vote, UserPerspective } = require('../models');
+const sequelize = require('sequelize');
+const { Op } = require('sequelize');
 
 router.get('/comments/:articleId', async (req, res) => {
     try {
@@ -10,14 +12,53 @@ router.get('/comments/:articleId', async (req, res) => {
                 {
                     model: Perspective,
                     as: 'Perspective', 
-                    attributes: ['perspectiveName']
+                    attributes: ['perspectiveId', 'perspectiveName', 'type']
                 }
             ]
         });
         
-        console.log('Comments being sent:', comments);
+        // Get the UserPerspective values separately
+        const commentUserIds = comments.map(c => c.userId);
+        const commentPerspectiveIds = comments.map(c => c.perspectiveId);
+        const userPerspectives = await UserPerspective.findAll({
+            where: { 
+                perspectiveId: { [Op.in]: commentPerspectiveIds },
+                userId: { [Op.in]: commentUserIds }
+            },
+            include: [{
+                model: Perspective,
+                attributes: ['perspectiveId', 'perspectiveName', 'type']
+            }]
+        });
+
+        // Create a map of perspectiveId+userId to perspective data
+        const perspectiveMap = new Map();
+        userPerspectives.forEach(up => {
+            perspectiveMap.set(`${up.perspectiveId}-${up.userId}`, {
+                perspectiveId: up.perspectiveId,
+                perspectiveName: up.Perspective.perspectiveName,
+                type: up.Perspective.type,
+                value: up.value
+            });
+        });
         
-        res.json(comments);
+        // Transform the comments to include the perspective data
+        const transformedComments = comments.map(comment => {
+            const rawComment = comment.toJSON();
+            const perspectiveData = perspectiveMap.get(`${comment.perspectiveId}-${comment.userId}`);
+            return {
+                ...rawComment,
+                perspectiveValue: perspectiveData ? perspectiveData.value : null,
+                Perspective: {
+                    ...rawComment.Perspective,
+                    value: perspectiveData ? perspectiveData.value : null
+                }
+            };
+        });
+        
+        console.log('Comments being sent:', transformedComments);
+        
+        res.json(transformedComments);
     } catch (error) {
         console.error('Error fetching comments:', error);
         res.status(500).json({ error: 'Failed to fetch comments' });

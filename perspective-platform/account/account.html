@@ -26,49 +26,293 @@
     </header>
 
     <div class="account-container">
-        <h1 id="welcomeMessage"></h1>
+        <h1 id="welcomeMessage">Welcome!</h1>
         
         <div class="account-tabs">
             <button class="tab-button active" id="perspectivesTab">Perspectives</button>
+            <button class="tab-button" id="profileTab">Profile</button>
             <button class="tab-button" id="integrationsTab">Integrations</button>
             <button class="tab-button" id="activityTab">Activity</button>
         </div>
 
         <div id="perspectivesContent" class="tab-content active">
-            <div class="perspectives-section">
+            <div class="perspectives-header">
+                <button id="generatePerspectivesBtn" class="generate-btn">Generate Perspectives</button>
+                <div class="perspective-filters">
+                    <select id="perspectiveTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="demographic">Demographic</option>
+                        <option value="education">Education</option>
+                        <option value="professional">Professional</option>
+                        <option value="social">Social</option>
+                    </select>
+                    <select id="verificationFilter">
+                        <option value="">All Verification Status</option>
+                        <option value="verified">Verified</option>
+                        <option value="pending">Pending Verification</option>
+                        <option value="unverified">Unverified</option>
+                    </select>
+                </div>
+            </div>
+            <div class="perspectives-list">
                 <table id="perspectivesTable">
                     <thead>
                         <tr>
-                            <th>Perspective Name</th>
-                            <th>Last Updated</th>
-                            <th>Type</th>
+                            <th>Perspective</th>
+                            <th>Value</th>
+                            <th>Source</th>
+                            <th>Verification Status</th>
+                            <th>Last Verified</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="perspectivesBody">
+                    <tbody>
+                        <!-- Perspectives will be loaded here -->
                     </tbody>
                 </table>
             </div>
         </div>
 
+        <div id="profileContent" class="tab-content">
+            <div class="profile-section">
+                <h2>Profile Information</h2>
+                <form id="profileForm" class="profile-form">
+                    <div class="form-group">
+                        <label for="primaryEmail">Primary Email</label>
+                        <div class="input-with-verification">
+                            <input type="email" id="primaryEmail" name="primaryEmail" readonly class="readonly-input">
+                            <span class="verification-badge verified">Verified</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <div class="input-with-verification">
+                            <input type="tel" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10}" placeholder="1234567890">
+                            <button type="button" class="verify-btn" data-field="phone">Verify</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="birthDate">Birth Date</label>
+                        <div class="input-with-verification">
+                            <input type="date" id="birthDate" name="birthDate">
+                            <span class="verification-badge pending">Pending ID Verification</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group location-fields">
+                        <label>Location</label>
+                        <div class="location-group">
+                            <div class="input-with-verification">
+                                <input type="text" id="city" name="city" placeholder="City" class="location-input">
+                                <input type="text" id="state" name="state" placeholder="State" class="location-input">
+                                <input type="text" id="zipCode" name="zipCode" placeholder="Zip Code" class="location-input">
+                                <button type="button" class="verify-btn" data-field="location">Verify Address</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" class="form-input">
+                            <option value="">Select gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="non-binary">Non-binary</option>
+                            <option value="other">Other</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="politicalAffiliation">Political Affiliation</label>
+                        <select id="politicalAffiliation" name="politicalAffiliation" class="form-input">
+                            <option value="">Select affiliation</option>
+                            <option value="democrat">Democrat</option>
+                            <option value="republican">Republican</option>
+                            <option value="independent">Independent</option>
+                            <option value="other">Other</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="maritalStatus">Marital Status</label>
+                        <select id="maritalStatus" name="maritalStatus" class="form-input">
+                            <option value="">Select status</option>
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="divorced">Divorced</option>
+                            <option value="widowed">Widowed</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="numberOfChildren">Number of Children</label>
+                        <input type="number" id="numberOfChildren" name="numberOfChildren" min="0" class="form-input">
+                    </div>
+                    
+                    <div class="education-section">
+                        <h3>Education History</h3>
+                        
+                        <!-- High School -->
+                        <div class="education-level">
+                            <label>High School</label>
+                            <div class="education-header">
+                                <div class="graduated-checkbox">
+                                    <input type="checkbox" id="hsGraduated" name="education.highSchool.graduated">
+                                    <label for="hsGraduated">Graduated</label>
+                                </div>
+                                <button type="button" class="verify-btn" data-field="highschool">Verify with School</button>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="hsName" name="education.highSchool.schoolName" placeholder="School Name">
+                                <input type="number" id="hsYear" name="education.highSchool.graduationYear" placeholder="Graduation Year">
+                            </div>
+                        </div>
+
+                        <!-- Undergraduate -->
+                        <div class="education-level">
+                            <label>Undergraduate</label>
+                            <div class="education-header">
+                                <div class="graduated-checkbox">
+                                    <input type="checkbox" id="ugGraduated" name="education.undergraduate.graduated">
+                                    <label for="ugGraduated">Graduated</label>
+                                </div>
+                                <button type="button" class="verify-btn" data-field="undergraduate">Verify with University</button>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="ugName" name="education.undergraduate.schoolName" placeholder="School Name">
+                                <input type="number" id="ugYear" name="education.undergraduate.graduationYear" placeholder="Graduation Year">
+                                <input type="text" id="ugDegree" name="education.undergraduate.degree" placeholder="Degree (e.g. BA, BS)">
+                                <input type="text" id="ugMajor" name="education.undergraduate.major" placeholder="Major">
+                            </div>
+                        </div>
+
+                        <!-- Graduate -->
+                        <div class="education-level">
+                            <label>Graduate</label>
+                            <div class="education-header">
+                                <div class="graduated-checkbox">
+                                    <input type="checkbox" id="gradGraduated" name="education.graduate.graduated">
+                                    <label for="gradGraduated">Graduated</label>
+                                </div>
+                                <button type="button" class="verify-btn" data-field="graduate">Verify with University</button>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="gradName" name="education.graduate.schoolName" placeholder="School Name">
+                                <input type="number" id="gradYear" name="education.graduate.graduationYear" placeholder="Graduation Year">
+                                <input type="text" id="gradDegree" name="education.graduate.degree" placeholder="Degree (e.g. MA, MS, MBA)">
+                                <input type="text" id="gradField" name="education.graduate.field" placeholder="Field of Study">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="save-profile-btn">Save Profile</button>
+                </form>
+
+                <div class="form-group emails-section">
+                    <label>Email Addresses</label>
+                    <div id="emailsList" class="emails-list">
+                        <!-- Emails will be loaded here -->
+                    </div>
+                    <div class="add-email-form">
+                        <input type="email" id="newEmail" placeholder="Add another email address">
+                        <button type="button" id="addEmailBtn" class="add-email-button">Add Email</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="integrationsContent" class="tab-content">
-            <div class="integrations-grid">
-                <!-- Integration cards will be populated here -->
+            <div class="integrations-container">
+                <div class="integrations-grid">
+                    <div class="integrations-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Integration</th>
+                                    <th>Status</th>
+                                    <th>Last Synced</th>
+                                </tr>
+                            </thead>
+                            <tbody class="integrations-body">
+                                <tr>
+                                    <td>
+                                        <button onclick="connectLinkedIn()" class="connect-button linkedin">
+                                            <img src="../assets/integrations/Sign-in-Large---Default.png" alt="Sign in with LinkedIn">
+                                            Connect with LinkedIn
+                                        </button>
+                                    </td>
+                                    <td id="linkedinStatus">Not Connected</td>
+                                    <td id="linkedinLastSynced">Never</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button onclick="connectInstagram()" class="connect-button instagram">
+                                            <img src="../assets/integrations/signin_with_instagram.png" alt="Sign in with Instagram">
+                                            Connect with Instagram
+                                        </button>
+                                    </td>
+                                    <td id="instagramStatus">Not Connected</td>
+                                    <td id="instagramLastSynced">Never</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button onclick="connectFacebook()" class="connect-button facebook">
+                                            <img src="../assets/integrations/signin_with_facebook.png" alt="Sign in with Facebook">
+                                            Connect with Facebook
+                                        </button>
+                                    </td>
+                                    <td id="facebookStatus">Not Connected</td>
+                                    <td id="facebookLastSynced">Never</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <button onclick="connectIdMe()" class="connect-button idme">
+                                            <img src="../assets/integrations/signin_with_idme.png" alt="Sign in with ID.me">
+                                            Connect with ID.me
+                                        </button>
+                                    </td>
+                                    <td id="idmeStatus">Not Connected</td>
+                                    <td id="idmeLastSynced">Never</td>
+                                </tr>
+                                <!-- Other integration rows can be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="integrations-details">
+                        <div class="details-panel">
+                            <!-- Integration details will be shown here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="integration-map-section">
+                    <h3>Perspective Mapping</h3>
+                    <table class="integration-map-table">
+                        <thead>
+                            <tr>
+                                <th>Integration</th>
+                                <th>Data Points</th>
+                                <th>Mapped Perspectives</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Mapping information will be added here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <div id="activityContent" class="tab-content">
-            <div class="activity-section">
-                <h2>Your Posts</h2>
-                <div id="userPosts"></div>
-                
-                <h2>Your Comments</h2>
-                <div id="userComments"></div>
+            <div class="activity-timeline">
+                <!-- Activity items will be loaded here -->
             </div>
         </div>
     </div>
-
-    <script src="../index/auth.js"></script>
     <script src="account.js"></script>
 </body>
 </html>

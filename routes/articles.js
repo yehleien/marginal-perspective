@@ -2,19 +2,66 @@ const express = require('express');
 const axios = require('axios');
 const Sequelize = require('sequelize');
 const cheerio = require('cheerio');
-const { Article, Perspective, Vote } = require('../models');
+const { Article, Perspective, Vote, Comment, sequelize } = require('../models');
 const router = express.Router();
+
+// Media bias ratings cache
+const biasCache = {
+    'nytimes.com': { bias: 'Left-Center', factRating: 'High' },
+    'foxnews.com': { bias: 'Right', factRating: 'Mixed' },
+    'reuters.com': { bias: 'Center', factRating: 'Very High' },
+    'apnews.com': { bias: 'Center', factRating: 'Very High' },
+    'wsj.com': { bias: 'Center-Right', factRating: 'High' },
+    'theguardian.com': { bias: 'Left-Center', factRating: 'High' },
+    'bbc.com': { bias: 'Center', factRating: 'High' },
+    'npr.org': { bias: 'Center-Left', factRating: 'Very High' },
+    'washingtonpost.com': { bias: 'Left-Center', factRating: 'High' },
+    'breitbart.com': { bias: 'Far Right', factRating: 'Mixed' },
+    'huffpost.com': { bias: 'Left', factRating: 'Mixed' },
+    'dailywire.com': { bias: 'Right', factRating: 'Mixed' },
+    'nbcnews.com': { bias: 'Left-Center', factRating: 'High' },
+    'cnn.com': { bias: 'Left', factRating: 'Mixed' },
+    'nypost.com': { bias: 'Right-Center', factRating: 'Mixed' }
+};
+
+// Get media bias for a domain
+router.get('/media_bias/:domain', async (req, res) => {
+    try {
+        const { domain } = req.params;
+        const cleanDomain = domain.replace('www.', '').toLowerCase();
+        
+        if (biasCache[cleanDomain]) {
+            res.json(biasCache[cleanDomain]);
+        } else {
+            // Return a neutral response for unknown sources
+            res.json({ bias: 'Unknown', factRating: 'Unrated' });
+        }
+    } catch (error) {
+        console.error('Error getting media bias:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 router.get('/get_latest', async (req, res) => {
     try {
-        const index = parseInt(req.query.index) || 0; // For pagination, if needed
-        const limit = 27; // Always return 27 articles
+        const index = parseInt(req.query.index) || 0;
+        const limit = 27;
+        const scope = req.query.scope;
 
-        const articles = await Article.findAll({
-            order: [['submitDate', 'DESC']], // Newest posts first
+        const queryOptions = {
+            order: [['submitDate', 'DESC']],
             offset: index,
             limit: limit
-        });
+        };
+
+        // Add scope filter if provided and not 'all'
+        if (scope && scope !== 'all') {
+            queryOptions.where = {
+                scope: scope.toLowerCase()
+            };
+        }
+
+        const articles = await Article.findAll(queryOptions);
         res.json(articles);
     } catch (err) {
         console.error(err);
@@ -100,21 +147,22 @@ router.post('/downvote/:articleId', async (req, res) => {
     }
 });
 
-router.get('/posts/:postId', async (req, res) => {
+router.get('/posts/:id', async (req, res) => {
     try {
-        console.log("Fetching article with ID:", req.params.postId);
-        const postId = req.params.postId;
-        const article = await Article.findByPk(postId, {
-            include: [{ model: Perspective }]
-        });
-        console.log("Article found:", article);
+        const articleId = parseInt(req.params.id, 10);
+        console.log('Looking for article:', articleId);
+        
+        const article = await Article.findByPk(articleId);
+
         if (!article) {
             return res.status(404).json({ message: 'Article not found' });
         }
+
+        console.log('Found article:', article);
         res.json(article);
     } catch (err) {
-        console.error("Error fetching article:", err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Detailed error:', err);
+        res.status(500).json({ message: err.message });
     }
 });
 
@@ -125,6 +173,12 @@ router.post('/submit_article', async (req, res) => {
 
         if (!req.session.userId) {
             return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        // Validate scope
+        const validScopes = ['news', 'politics', 'healthcare', 'sports', 'technology', 'entertainment', 'business', 'science'];
+        if (!scope || !validScopes.includes(scope.toLowerCase())) {
+            return res.status(400).json({ message: 'Invalid scope. Must be one of: ' + validScopes.join(', ') });
         }
 
         // Validate perspectiveID
@@ -242,6 +296,38 @@ router.get('/get_user_posts', async (req, res) => {
     } catch (error) {
         console.error('Error fetching user posts:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Get top perspectives used in comments for a post
+router.get('/top_perspectives/:articleId', async (req, res) => {
+    try {
+        const { articleId } = req.params;
+        const topPerspectives = await Comment.findAll({
+            where: { articleId },
+            attributes: [
+                [sequelize.fn('COUNT', sequelize.col('*')), 'count']
+            ],
+            include: [{
+                model: Perspective,
+                as: 'Perspective',
+                attributes: ['perspectiveName'],
+                required: true
+            }],
+            group: ['Perspective.perspectiveId', 'Perspective.perspectiveName'],
+            order: [[sequelize.fn('COUNT', sequelize.col('*')), 'DESC']],
+            limit: 5
+        });
+
+        const formattedResults = topPerspectives.map(result => ({
+            perspectiveName: result.Perspective.perspectiveName,
+            count: parseInt(result.dataValues.count)
+        }));
+
+        res.json(formattedResults);
+    } catch (error) {
+        console.error('Error getting top perspectives:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

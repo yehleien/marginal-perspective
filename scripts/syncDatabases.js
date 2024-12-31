@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize';
 const devDB = new Sequelize({
   username: "retool",
   password: "kOa18IYRVbfL",
-  database: "retool",
+  database: "mp2",
   host: "ep-falling-cake-a67kv2p5.us-west-2.retooldb.com",
   dialect: "postgres",
   dialectOptions: {

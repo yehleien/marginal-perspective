@@ -1,0 +1,112 @@
+erDiagram
+    _migration_internal_statements {
+        bigint statement_order PK
+        uuid statement_id
+        jsonb data
+    }
+    Articles {
+        integer id PK
+        character varying url
+        timestamp with time zone submitDate
+        character varying type
+        character varying scope
+        text content
+        integer perspectiveId FK
+        bigint userId FK
+    }
+    Comments {
+        integer id PK
+        text text
+        integer userId FK
+        integer articleId FK
+        integer perspectiveId FK
+        integer upvotes
+        integer downvotes
+        integer parentID
+        integer replyCount
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    Perspectives {
+        integer perspectiveId PK
+        integer userId FK
+        character varying perspectiveName
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+        USER-DEFINED type
+        ARRAY options
+        character varying verificationMethod
+        double precision activityScore
+        timestamp with time zone verificationDate
+    }
+    Sessions {
+        character varying sid PK
+        timestamp with time zone expires
+        text data
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    UserPerspective {
+        integer userId
+        integer perspectiveId
+        bigint rowid PK
+    }
+    UserPerspectives {
+        integer id PK
+        integer userId
+        integer perspectiveId
+    }
+    Users {
+        integer id PK
+        character varying email
+        character varying password
+        character varying username
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    Vote {
+        integer id PK
+        integer user_id FK
+        integer comment_id FK
+        boolean is_upvote
+        boolean is_article_vote
+        integer article_id
+    }
+    SequelizeMeta {
+        character varying name PK
+    }
+    Votes {
+        bigint id PK
+        bigint articleId
+        bigint userId
+        boolean is_upvote
+        boolean is_article_vote
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    CommunityPosts {
+        bigint id PK
+        text content
+        bigint perspectiveId FK
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    GmailTokens {
+        bigint id PK
+        bigint userId FK
+        text accessToken
+        text refreshToken
+        timestamp with time zone expiresAt
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    Perspectives ||--o{ Articles : has
+    Users ||--o{ Articles : has
+    Articles ||--o{ Comments : has
+    Perspectives ||--o{ Comments : has
+    Users ||--o{ Comments : has
+    Users ||--o{ Perspectives : has
+    Comments ||--o{ Vote : has
+    Users ||--o{ Vote : has
+    Perspectives ||--o{ CommunityPosts : has
+    Users ||--o{ GmailTokens : has

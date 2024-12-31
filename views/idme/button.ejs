@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ID.me Login</title>
+  <style>
+    .container {
+      text-align: center;
+      padding: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span
+      id="idme-wallet-button"
+      data-scope="alumni,employee,government,military,nurse,responder,student,teacher"
+      data-client-id="<%= clientId %>"
+      data-redirect="<%= redirectUri %>"
+      data-response="code"
+      data-text="Verify with ID.me"
+      data-show-verify="true">
+    </span>
+    <script src="https://s3.amazonaws.com/idme/developer/idme-buttons/assets/js/idme-wallet-button.js"></script>
+  </div>
+</body>
+</html> 

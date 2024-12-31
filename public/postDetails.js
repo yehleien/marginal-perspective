@@ -5,24 +5,38 @@ document.addEventListener('DOMContentLoaded', async function() {
         await fetchAndDisplayPostDetails(postId);
         await fetchAndDisplayComments(postId);
         await fetchAndDisplayPerspectives();
+        
+        // Add click handlers for voting buttons
+        document.getElementById('upvoteButton').addEventListener('click', () => votePost(postId, 'upvote'));
+        document.getElementById('downvoteButton').addEventListener('click', () => votePost(postId, 'downvote'));
     }
 
     document.getElementById('commentForm').addEventListener('submit', async function(event) {
         event.preventDefault();
         const commentText = document.getElementById('commentText').value;
-        const perspectiveId = document.getElementById('perspectiveDropdown').value;
+        const perspectiveSelect = document.getElementById('perspectiveDropdown');
+        const selectedOption = perspectiveSelect.options[perspectiveSelect.selectedIndex];
+        const perspectiveId = selectedOption.dataset.perspectiveId;
         const parentID = document.getElementById('parentIDInput').value || null;
         await submitComment(commentText, perspectiveId, parentID, postId);
         fetchAndDisplayComments(postId);
     });
 
     const user = await getCurrentUser();
-    const perspectivesResponse = await fetch(`/perspectives/get_perspectives/${user.id}`);
+    // Get user's perspectives from the perspectives endpoint instead
+    const perspectivesResponse = await fetch(`/perspectives/get_perspectives/${user.id}`, { credentials: 'include' });
     const perspectives = await perspectivesResponse.json();
-    const perspectiveDropdown = document.getElementById('perspectiveDropdown');    perspectives.forEach(perspective => {
+    const perspectiveDropdown = document.getElementById('perspectiveDropdown');
+    
+    // Clear any existing options
+    perspectiveDropdown.innerHTML = '<option value="">Select a perspective...</option>';
+    
+    // Add perspectives with their values
+    perspectives.forEach(perspective => {
         const option = document.createElement('option');
+        option.dataset.perspectiveId = perspective.perspectiveId;
         option.value = perspective.perspectiveId;
-        option.textContent = perspective.perspectiveName;
+        option.textContent = `${perspective.perspectiveName}`;
         perspectiveDropdown.appendChild(option);
     });
 });
@@ -89,44 +103,187 @@ function updateCommentsDisplay(comments, container) {
     window.scrollTo(0, scrollPosition);
 }
 
-async function fetchAndDisplayComments(postId) {
-    const response = await fetch(`/comments/comments/${postId}`, { credentials: 'include' });
-    if (!response.ok) {
-        console.error(`HTTP error! status: ${response.status}`);
-        return;
+async function fetchAndDisplayComments(postId, filterOptions = {}) {
+    try {
+        const response = await fetch(`/comments/comments/${postId}`, { credentials: 'include' });
+        if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status}`);
+            return;
+        }
+        const comments = await response.json();
+        const commentsContainer = document.getElementById('commentsContainer');
+        commentsContainer.innerHTML = '';
+
+        // Create filter UI if it doesn't exist
+        createOrUpdateFilterUI(comments);
+
+        // Apply filters
+        let filteredComments = comments;
+        
+        // Filter by perspective
+        if (filterOptions.perspectiveId) {
+            filteredComments = filteredComments.filter(c => c.perspectiveId === filterOptions.perspectiveId);
+        }
+
+        // Sort comments
+        switch(filterOptions.sort) {
+            case 'new':
+                filteredComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                break;
+            case 'top':
+                filteredComments.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
+                break;
+            case 'controversial':
+                filteredComments.sort((a, b) => (b.upvotes + b.downvotes) - (a.upvotes + a.downvotes));
+                break;
+            default:
+                // Default to new
+                filteredComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        const user = await getCurrentUser();
+        const nestedComments = createNestedComments(filteredComments);
+
+        // Update comment count in filter UI
+        updateCommentCounts(comments);
+
+        nestedComments.forEach(comment => {
+            const commentElement = createCommentElement(comment, user.id, postId);
+            commentsContainer.appendChild(commentElement);
+        });
+    } catch (error) {
+        console.error('Error:', error);
     }
-    const comments = await response.json();
-    const commentsContainer = document.getElementById('commentsContainer');
-    commentsContainer.innerHTML = '';
+}
 
-    const user = await getCurrentUser();
+function createOrUpdateFilterUI(comments) {
+    let filterContainer = document.getElementById('commentFilters');
+    if (!filterContainer) {
+        filterContainer = document.createElement('div');
+        filterContainer.id = 'commentFilters';
+        filterContainer.className = 'comment-filters';
+        document.getElementById('commentsContainer').insertAdjacentElement('beforebegin', filterContainer);
+    }
 
-    // Fetch all unique perspective IDs from comments
-    const perspectiveIds = [...new Set(comments.map(comment => comment.perspectiveId))];    
-    // Fetch perspective names
-    const perspectivesResponse = await fetch('/perspectives/get_perspectives_by_ids', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ perspectiveIds }),
-        credentials: 'include'
+    // Clear existing filters
+    filterContainer.innerHTML = '';
+
+    // Create perspective filters
+    const perspectiveFilters = document.createElement('div');
+    perspectiveFilters.className = 'perspective-filters';
+    
+    // Get unique perspectives and their values from comments
+    const perspectives = new Map();
+    comments.forEach(comment => {
+        if (comment.Perspective) {
+            const existing = perspectives.get(comment.perspectiveId) || {
+                perspective: comment.Perspective,
+                values: new Set(),
+                count: 0
+            };
+            existing.values.add(comment.perspectiveValue);
+            existing.count++;
+            perspectives.set(comment.perspectiveId, existing);
+        }
     });
-    const perspectives = await perspectivesResponse.json();
 
-    // Create a map of perspective IDs to names
-    const perspectiveMap = new Map(perspectives.map(p => [p.perspectiveId.toString(), p.perspectiveName]));
+    // Add "All Comments" button
+    const allButton = document.createElement('button');
+    allButton.className = 'filter-button active';
+    allButton.textContent = `All Comments (${comments.length})`;
+    allButton.onclick = () => {
+        document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+        allButton.classList.add('active');
+        hideSubfilters();
+        fetchAndDisplayComments(new URLSearchParams(window.location.search).get('postId'));
+    };
+    perspectiveFilters.appendChild(allButton);
 
-    console.log('Perspective Map:', perspectiveMap);
+    // Create subfilters container
+    const subfiltersContainer = document.createElement('div');
+    subfiltersContainer.id = 'subfiltersContainer';
+    subfiltersContainer.className = 'subfilters-container';
 
-    // Fetch user's perspectives
-    const userPerspectivesResponse = await fetch(`/UserPerspective/get_user_perspectives/${user.id}`);
-    const userPerspectives = await userPerspectivesResponse.json();
+    // Add perspective filter buttons
+    perspectives.forEach(({ perspective, values, count }, perspectiveId) => {
+        const button = document.createElement('button');
+        button.className = 'filter-button';
+        button.dataset.perspectiveId = perspectiveId;
+        button.dataset.perspectiveType = perspective.type;
+        button.textContent = `${perspective.perspectiveName} (${count})`;
+        button.style.backgroundColor = getColorForPerspective(perspectiveId);
+        
+        button.onclick = () => {
+            document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            showSubfilters(perspective, Array.from(values), comments);
+        };
+        
+        perspectiveFilters.appendChild(button);
+    });
 
-    // Create a nested structure for comments
-    const nestedComments = createNestedComments(comments);
+    // Create sort options
+    const sortOptions = document.createElement('div');
+    sortOptions.className = 'sort-options';
+    
+    const sortSelect = document.createElement('select');
+    sortSelect.className = 'sort-select';
+    
+    const sortTypes = [
+        { value: 'new', label: 'Newest' },
+        { value: 'top', label: 'Top Voted' },
+        { value: 'controversial', label: 'Controversial' }
+    ];
 
-    nestedComments.forEach(comment => {
-        const commentElement = createCommentElement(comment, user.id, postId, perspectiveMap, userPerspectives);
-        commentsContainer.appendChild(commentElement);
+    sortTypes.forEach(sort => {
+        const option = document.createElement('option');
+        option.value = sort.value;
+        option.textContent = sort.label;
+        sortSelect.appendChild(option);
+    });
+
+    sortSelect.onchange = (e) => {
+        const activeFilter = document.querySelector('.filter-button.active:not(:first-child)');
+        const perspectiveId = activeFilter?.dataset?.perspectiveId;
+        const subfilterValue = document.querySelector('.subfilter-button.active')?.dataset?.value;
+        
+        fetchAndDisplayComments(new URLSearchParams(window.location.search).get('postId'), {
+            perspectiveId,
+            subfilterValue,
+            sort: e.target.value
+        });
+    };
+
+    const sortLabel = document.createElement('label');
+    sortLabel.textContent = 'Sort by: ';
+    sortLabel.appendChild(sortSelect);
+    sortOptions.appendChild(sortLabel);
+
+    filterContainer.appendChild(perspectiveFilters);
+    filterContainer.appendChild(subfiltersContainer);
+    filterContainer.appendChild(sortOptions);
+}
+
+function getColorForPerspective(perspectiveId) {
+    // Generate a consistent pastel color based on perspectiveId
+    const hue = (parseInt(perspectiveId) * 137.508) % 360; // Golden angle approximation
+    return `hsl(${hue}, 70%, 85%)`;
+}
+
+function updateCommentCounts(comments) {
+    const perspectives = new Map();
+    comments.forEach(comment => {
+        if (comment.Perspective) {
+            perspectives.set(comment.perspectiveId, (perspectives.get(comment.perspectiveId) || 0) + 1);
+        }
+    });
+
+    document.querySelectorAll('.filter-button').forEach(button => {
+        const perspectiveId = button.dataset.perspectiveId;
+        if (perspectiveId) {
+            const count = perspectives.get(parseInt(perspectiveId)) || 0;
+            button.textContent = `${button.textContent.split('(')[0]}(${count})`;
+        }
     });
 }
 
@@ -152,12 +309,13 @@ function createNestedComments(comments) {
     return rootComments;
 }
 
-function createCommentElement(comment, currentUserId, postId, perspectiveMap, userPerspectives, depth = 0) {
+function createCommentElement(comment, currentUserId, postId, depth = 0) {
     const commentElement = document.createElement('div');
     commentElement.className = 'comment';
     commentElement.id = `comment-${comment.id}`;
 
-    const userHasPerspective = userPerspectives.some(up => up.perspectiveId === comment.perspectiveId);
+    // Check if current user's perspective matches the comment's perspective
+    const canVote = comment.perspectiveValue !== null;
 
     const votesElement = document.createElement('div');
     votesElement.className = 'comment-votes';
@@ -165,9 +323,9 @@ function createCommentElement(comment, currentUserId, postId, perspectiveMap, us
     const upvoteButton = document.createElement('button');
     upvoteButton.className = `vote-button ${comment.userHasUpvoted ? 'upvoted' : ''}`;
     upvoteButton.innerHTML = '▲';
-    upvoteButton.disabled = !userHasPerspective;
+    upvoteButton.disabled = !canVote;
     upvoteButton.onclick = async () => {
-        if (userHasPerspective) {
+        if (canVote) {
             const result = await upvoteComment(comment.id);
             if (result.success) {
                 updateCommentVotes(comment, result, votesElement);
@@ -185,9 +343,9 @@ function createCommentElement(comment, currentUserId, postId, perspectiveMap, us
     const downvoteButton = document.createElement('button');
     downvoteButton.className = `vote-button ${comment.userHasDownvoted ? 'downvoted' : ''}`;
     downvoteButton.innerHTML = '▼';
-    downvoteButton.disabled = !userHasPerspective;
+    downvoteButton.disabled = !canVote;
     downvoteButton.onclick = async () => {
-        if (userHasPerspective) {
+        if (canVote) {
             const result = await downvoteComment(comment.id);
             if (result.success) {
                 updateCommentVotes(comment, result, votesElement);
@@ -204,7 +362,9 @@ function createCommentElement(comment, currentUserId, postId, perspectiveMap, us
 
     const headerElement = document.createElement('div');
     headerElement.className = 'comment-header';
-    headerElement.textContent = perspectiveMap.get(comment.perspectiveId.toString()) || 'Unknown Perspective';
+    const perspectiveName = comment.Perspective ? comment.Perspective.perspectiveName : 'Unknown Perspective';
+    const perspectiveValue = comment.perspectiveValue || '';
+    headerElement.textContent = `${perspectiveName}: ${perspectiveValue}`;
 
     const textElement = document.createElement('div');
     textElement.className = 'comment-text';
@@ -215,7 +375,7 @@ function createCommentElement(comment, currentUserId, postId, perspectiveMap, us
     
     const replyButton = document.createElement('button');
     replyButton.textContent = 'Reply';
-    replyButton.onclick = () => showReplyForm(comment, currentUserId, postId, perspectiveMap, userPerspectives, depth + 1);
+    replyButton.onclick = () => showReplyForm(comment, currentUserId, postId, depth + 1);
     
     actionsElement.appendChild(replyButton);
 
@@ -231,7 +391,7 @@ function createCommentElement(comment, currentUserId, postId, perspectiveMap, us
         repliesContainer.className = 'comment-replies';
         comment.replies.forEach(reply => {
             repliesContainer.appendChild(
-                createCommentElement(reply, currentUserId, postId, perspectiveMap, userPerspectives, depth + 1)
+                createCommentElement(reply, currentUserId, postId, depth + 1)
             );
         });
         contentElement.appendChild(repliesContainer);
@@ -259,7 +419,7 @@ function updateCommentVotes(comment, result, votesElement) {
     `;
 }
 
-function showReplyForm(parentComment, currentUserId, postId, perspectiveMap, userPerspectives, depth) {
+function showReplyForm(parentComment, currentUserId, postId, depth) {
     // Remove any existing reply form
     const existingForm = document.querySelector('.reply-form');
     if (existingForm) {
@@ -285,7 +445,7 @@ function showReplyForm(parentComment, currentUserId, postId, perspectiveMap, use
 
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Reply';
-    submitButton.type = 'button'; // Changed from 'submit' to 'button'
+    submitButton.type = 'button';
     submitButton.className = 'submit-reply-button';
 
     const cancelButton = document.createElement('button');
@@ -385,47 +545,47 @@ async function downvoteComment(commentId) {
 
 async function fetchAndDisplayPostDetails(postId) {
     try {
-        console.log('Fetching post details for ID:', postId);
-        const response = await fetch(`/articles/posts/${postId}`, { credentials: 'include' });
-        console.log('Response status:', response.status);
+        // Fetch post details
+        const response = await fetch(`/articles/posts/${postId}`);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Failed to fetch post details');
         }
         const post = await response.json();
-        console.log('Fetched post details:', post);
-
-        const titleElement = document.getElementById('postTitle');
-        titleElement.innerHTML = `<a href="${post.url}" target="_blank">${post.title}</a>`;
         
-        const contentElement = document.getElementById('postContent');
-        contentElement.textContent = post.content;
-        
-        document.getElementById('postDate').textContent = new Date(post.submitDate).toLocaleDateString();
-        document.getElementById('postPerspective').textContent = post.Perspective ? post.Perspective.perspectiveName : 'Unknown';
-
-        const expandButton = document.getElementById('expandButton');
-        if (contentElement.scrollHeight > contentElement.clientHeight) {
-            expandButton.style.display = 'block';
-            expandButton.addEventListener('click', toggleContent);
+        // Fetch vote counts
+        const voteResponse = await fetch(`/articles/voteCounts/${postId}`);
+        if (!voteResponse.ok) {
+            throw new Error('Failed to fetch vote counts');
         }
-
-        // Fetch vote counts separately
-        const voteCountsResponse = await fetch(`/articles/voteCounts/${postId}`, { credentials: 'include' });
-        const voteCounts = await voteCountsResponse.json();
-
-        // Set up vote buttons
-        const upvoteButton = document.getElementById('upvoteButton');
-        const downvoteButton = document.getElementById('downvoteButton');
+        const voteCounts = await voteResponse.json();
+        
+        document.getElementById('postTitle').textContent = post.title;
+        document.getElementById('postContent').textContent = post.content;
+        
+        // Display scope
+        const scopeElement = document.getElementById('postScope');
+        if (post.scope) {
+            scopeElement.textContent = post.scope.charAt(0).toUpperCase() + post.scope.slice(1);
+            scopeElement.style.display = 'inline-block';
+        } else {
+            scopeElement.style.display = 'none';
+        }
+        
+        const urlElement = document.getElementById('postUrl');
+        if (post.url) {
+            urlElement.href = post.url;
+            urlElement.textContent = post.url;
+            urlElement.style.display = 'block';
+        } else {
+            urlElement.style.display = 'none';
+        }
+        
+        // Update vote count with the fetched data
         const voteCount = document.getElementById('voteCount');
-
         voteCount.textContent = voteCounts.upvotes - voteCounts.downvotes;
-
-        upvoteButton.addEventListener('click', () => votePost(postId, 'upvote'));
-        downvoteButton.addEventListener('click', () => votePost(postId, 'downvote'));
-
-        updateVoteButtons(voteCounts);
     } catch (error) {
-        console.error('Error fetching post details:', error);
+        console.error('Error:', error);
+        alert('Failed to load post details.');
     }
 }
 
@@ -448,13 +608,18 @@ async function votePost(postId, voteType) {
             method: 'POST',
             credentials: 'include'
         });
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const result = await response.json();
-        updateVoteButtons(result);
+        
+        const voteCounts = await response.json();
+        const voteCount = document.getElementById('voteCount');
+        voteCount.textContent = voteCounts.upvotes - voteCounts.downvotes;
+        
+        updateVoteButtons(voteCounts);
     } catch (error) {
-        console.error('Error voting on post:', error);
+        console.error('Error voting:', error);
     }
 }
 
@@ -462,34 +627,113 @@ function updateVoteButtons(voteCounts) {
     const upvoteButton = document.getElementById('upvoteButton');
     const downvoteButton = document.getElementById('downvoteButton');
     const voteCount = document.getElementById('voteCount');
-
+    
     voteCount.textContent = voteCounts.upvotes - voteCounts.downvotes;
-    // Note: We don't have user's vote information here, so we can't update button styles
 }
 
 async function fetchAndDisplayPerspectives() {
     try {
-        // Fetch the current user to get the userId
-        const userResponse = await fetch('/account/current', {
-            credentials: 'include' // include credentials to send the session cookie
-        });
-        const user = await userResponse.json();
-        const userId = user.id;
-
-        // Fetch the user's perspectives by matching UserPerspective with Perspective
-        const response = await fetch(`/UserPerspective/get_user_perspectives/${userId}`, {
-            credentials: 'include' // include credentials to send the session cookie
-        });
-        const userPerspectives = await response.json();
-        const perspectivesDropdown = document.getElementById('perspectiveDropdown');
-        perspectivesDropdown.innerHTML = ''; // Clear existing options first
-        userPerspectives.forEach(type => {
+        const user = await getCurrentUser();
+        if (!user) return;
+        
+        const response = await fetch(`/perspectives/get_perspectives/${user.id}`);
+        if (!response.ok) throw new Error('Failed to fetch perspectives');
+        
+        const perspectives = await response.json();
+        const perspectiveDropdown = document.getElementById('perspectiveDropdown');
+        
+        perspectives.forEach(perspective => {
             const option = document.createElement('option');
-            option.value = type.perspectiveId; // Assuming each type has a unique ID
-            option.textContent = type.perspectiveName; // Assuming the name of the perspective type is what you want to display
-            perspectivesDropdown.appendChild(option);
+            option.value = perspective.perspectiveId;
+            option.textContent = perspective.perspectiveName;
+            perspectiveDropdown.appendChild(option);
         });
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+function showSubfilters(perspective, values, comments) {
+    const container = document.getElementById('subfiltersContainer');
+    container.innerHTML = '';
+    container.style.display = 'flex';
+
+    if (perspective.type === 'demographic' && perspective.perspectiveName.toLowerCase() === 'age') {
+        // Create age range slider for demographic perspectives
+        const ranges = calculateAgeRanges(values.map(Number));
+        ranges.forEach(range => {
+            const button = document.createElement('button');
+            button.className = 'subfilter-button';
+            button.dataset.value = `${range.min}-${range.max}`;
+            const count = comments.filter(c => {
+                const age = Number(c.perspectiveValue);
+                return c.perspectiveId === perspective.perspectiveId && 
+                       age >= range.min && age <= range.max;
+            }).length;
+            button.textContent = `${range.min}-${range.max} years (${count})`;
+            
+            button.onclick = () => handleSubfilterClick(button, perspective.perspectiveId, range);
+            container.appendChild(button);
+        });
+    } else {
+        // Create individual value buttons for other perspectives
+        values.sort().forEach(value => {
+            const button = document.createElement('button');
+            button.className = 'subfilter-button';
+            button.dataset.value = value;
+            const count = comments.filter(c => 
+                c.perspectiveId === perspective.perspectiveId && c.perspectiveValue === value
+            ).length;
+            button.textContent = `${value} (${count})`;
+            
+            button.onclick = () => handleSubfilterClick(button, perspective.perspectiveId, value);
+            container.appendChild(button);
+        });
+    }
+}
+
+function handleSubfilterClick(button, perspectiveId, value) {
+    document.querySelectorAll('.subfilter-button').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    
+    let filterValue;
+    if (typeof value === 'object') { // Age range
+        filterValue = (comment) => {
+            const age = Number(comment.perspectiveValue);
+            return age >= value.min && age <= value.max;
+        };
+    } else {
+        filterValue = value;
+    }
+    
+    fetchAndDisplayComments(new URLSearchParams(window.location.search).get('postId'), {
+        perspectiveId,
+        subfilterValue: filterValue,
+        sort: document.querySelector('.sort-select').value
+    });
+}
+
+function hideSubfilters() {
+    const container = document.getElementById('subfiltersContainer');
+    container.style.display = 'none';
+    container.innerHTML = '';
+}
+
+function calculateAgeRanges(ages) {
+    const min = Math.min(...ages);
+    const max = Math.max(...ages);
+    const rangeSize = 10; // 10-year ranges
+    const ranges = [];
+    
+    let start = Math.floor(min / rangeSize) * rangeSize;
+    let end = Math.ceil(max / rangeSize) * rangeSize;
+    
+    for (let i = start; i < end; i += rangeSize) {
+        ranges.push({
+            min: i,
+            max: i + rangeSize - 1
+        });
+    }
+    
+    return ranges;
 }

@@ -34,8 +34,10 @@ const UserPerspectiveRoutes = require('./routes/UserPerspective');
 const spotifyRoutes = require('./api-connections/spotify/spotifyRoutes');
 const gmailRoutes = require('./api-connections/gmail/gmailRoutes');
 const communitiesRouter = require('./routes/communities');
+const idmeRoutes = require('./routes/idme');
+const accountRoutes = require('./routes/account');
 
-console.log("Routes defined: commentRoutes, articleRoutes, perspectiveRoutes, UserPerspective Routes, spotifyRoutes, gmailRoutes, communitiesRouter");
+console.log("Routes defined: commentRoutes, articleRoutes, perspectiveRoutes, UserPerspective Routes, spotifyRoutes, gmailRoutes, communitiesRouter, idmeRoutes, accountRoutes");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -64,6 +66,8 @@ app.use('/spotify', spotifyRoutes);
 app.use('/auth/spotify', spotifyRoutes);
 app.use('/gmail', gmailRoutes);
 app.use('/communities', communitiesRouter);
+app.use('/idme', idmeRoutes);
+app.use('/account', accountRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.post('/account/login', (req, res) => {
@@ -291,7 +295,7 @@ app.get('/logout', (req, res) => {
 });
 
 // Add near the top with other requires
-const passport = require('./api-connections/linkedin/linkedinStrategy');
+// const passport = require('./api-connections/linkedin/linkedinStrategy');
 
 // Add these BEFORE your routes
 app.use(session({
@@ -301,27 +305,55 @@ app.use(session({
     cookie: { secure: false } // set to true if using https
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 // Add the LinkedIn routes
-app.use('/auth/linkedin', require('./routes/auth/linkedin'));
+// app.use('/auth/linkedin', require('./routes/auth/linkedin'));
 
 // Update your auth routes import
 app.use('/auth', require('./routes/auth'));
 
 // Add with other requires at top
-const linkedinRoutes = require('./routes/auth/linkedin');
+// const linkedinRoutes = require('./routes/auth/linkedin');
 
 // Add with other app.use statements
-app.use('/auth/linkedin', linkedinRoutes);
+// app.use('/auth/linkedin', linkedinRoutes);
 
 // Add this near your other static routes
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'perspective-platform', 'index', 'index.html'));
 });
-
 // Add these Passport serialize/deserialize functions
+// passport.serializeUser((user, done) => {
+//     done(null, user.id);
+// });
+
+// passport.deserializeUser(async (id, done) => {
+//     try {
+//         const user = await User.findByPk(id);
+//         done(null, user);
+//     } catch (err) {
+//         done(err, null);
+//     }
+// });
+
+const perspectivesRouter = require('./routes/perspectives');
+
+app.use('/perspectives', perspectivesRouter);
+
+const userPerspectiveRouter = require('./routes/UserPerspective');
+
+app.use('/UserPerspective', userPerspectiveRouter);
+
+const passport = require('passport');
+const linkedinRoutes = require('./routes/auth/linkedin');
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport serialize/deserialize
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });
@@ -334,3 +366,10 @@ passport.deserializeUser(async (id, done) => {
         done(err, null);
     }
 });
+
+// Add the LinkedIn routes
+app.use('/auth/linkedin', linkedinRoutes);
+
+const userPerspectiveRoutes = require('./routes/userPerspective');
+app.use('/UserPerspective', userPerspectiveRoutes);
+

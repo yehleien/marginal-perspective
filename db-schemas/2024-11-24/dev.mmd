@@ -1,0 +1,138 @@
+erDiagram
+    GmailTokens {
+        integer id PK
+        integer userId FK
+        string accessToken
+        string refreshToken
+        date expiresAt
+        date createdAt
+        date updatedAt
+    }
+    Commments {
+        integer id PK
+        date createdAt
+        date updatedAt
+        string text
+        integer upvotes
+        integer downvotes
+        integer userId
+        integer articleId
+        integer perspectiveId
+        integer parentID
+        integer replyCount
+    }
+    CommunityPosts {
+        integer id PK
+        string content
+        integer perspectiveId FK
+        integer userId FK
+        date createdAt
+        date updatedAt
+    }
+    Votes {
+        integer id PK
+        integer articleId
+        integer userId
+        boolean is_upvote
+        boolean is_article_vote
+        date createdAt
+        date updatedAt
+    }
+    Comments {
+        integer id PK
+        string text
+        integer userId FK
+        integer articleId FK
+        integer perspectiveId FK
+        integer upvotes
+        integer downvotes
+        integer parentID
+        integer replyCount
+        date createdAt
+        date updatedAt
+    }
+    SequelizeMeta {
+        string name PK
+    }
+    Articles {
+        integer id PK
+        string url
+        date submitDate
+        string type
+        string scope
+        string content
+        integer perspectiveId
+        string title
+        integer userId FK
+    }
+    mobile_app_sample_data {
+        bigint id PK
+        string name
+        string email
+        bigint sales
+        string image
+    }
+    snowboard {
+        integer id PK
+        string Resort_Name
+        string longitude
+        string latitude
+        string MapName
+        string url
+        string stats
+    }
+    Users {
+        integer id PK
+        string email
+        string password
+        string username
+        date createdAt
+        date updatedAt
+    }
+    Sessions {
+        string sid PK
+        date expires
+        string data
+        date createdAt
+        date updatedAt
+    }
+    UserPerspectives {
+        integer id PK
+        integer userId
+        integer perspectiveId
+    }
+    Vote {
+        integer id PK
+        integer userId FK
+        integer commentId
+        boolean is_upvote
+        boolean is_article_vote
+        integer articleId FK
+    }
+    Perspectives {
+        integer perspectiveId PK
+        integer userId FK
+        string perspectiveName
+        date createdAt
+        date updatedAt
+        string options
+        string type
+        string verificationMethod
+        date verificationDate
+        float activityScore
+        integer expertiseYears
+        string organization
+        string verificationDocuments
+        string verificationStatus
+        string categoryType
+    }
+    Users ||--o{ GmailTokens : has
+    Perspectives ||--o{ CommunityPosts : has
+    Users ||--o{ CommunityPosts : has
+    Users ||--o{ Comments : has
+    Articles ||--o{ Comments : has
+    Perspectives ||--o{ Comments : has
+    Users ||--o{ Articles : has
+    Users ||--o{ Vote : has
+    Articles ||--o{ Vote : has
+    Users ||--o{ Perspectives : has

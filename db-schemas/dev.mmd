@@ -1,0 +1,138 @@
+erDiagram
+    GmailTokens {
+        integer id PK
+        integer userId FK
+        text accessToken
+        text refreshToken
+        timestamp with time zone expiresAt
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    Commments {
+        integer id PK
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+        text text
+        integer upvotes
+        integer downvotes
+        integer userId
+        integer articleId
+        integer perspectiveId
+        integer parentID
+        integer replyCount
+    }
+    CommunityPosts {
+        integer id PK
+        text content
+        integer perspectiveId FK
+        integer userId FK
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    Votes {
+        integer id PK
+        integer articleId
+        integer userId
+        boolean is_upvote
+        boolean is_article_vote
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    Comments {
+        integer id PK
+        text text
+        integer userId FK
+        integer articleId FK
+        integer perspectiveId FK
+        integer upvotes
+        integer downvotes
+        integer parentID
+        integer replyCount
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    SequelizeMeta {
+        character varying name PK
+    }
+    Articles {
+        integer id PK
+        text url
+        timestamp with time zone submitDate
+        text type
+        text scope
+        text content
+        integer perspectiveId
+        text title
+        integer userId FK
+    }
+    mobile_app_sample_data {
+        bigint id PK
+        text name
+        text email
+        bigint sales
+        text image
+    }
+    snowboard {
+        integer id PK
+        text Resort Name
+        text longitude
+        text latitude
+        text MapName
+        text url
+        text stats
+    }
+    Users {
+        integer id PK
+        character varying email
+        character varying password
+        character varying username
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    Sessions {
+        character varying sid PK
+        timestamp with time zone expires
+        text data
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+    }
+    UserPerspectives {
+        integer id PK
+        integer userId
+        integer perspectiveId
+    }
+    Vote {
+        integer id PK
+        integer userId FK
+        integer commentId
+        boolean is_upvote
+        boolean is_article_vote
+        integer articleId FK
+    }
+    Perspectives {
+        integer perspectiveId PK
+        integer userId FK
+        character varying perspectiveName
+        timestamp with time zone createdAt
+        timestamp with time zone updatedAt
+        ARRAY options
+        character varying type
+        character varying verificationMethod
+        timestamp with time zone verificationDate
+        double precision activityScore
+        integer expertiseYears
+        character varying organization
+        ARRAY verificationDocuments
+        USER-DEFINED verificationStatus
+        character varying categoryType
+    }
+    Users ||--o{ GmailTokens : has
+    Perspectives ||--o{ CommunityPosts : has
+    Users ||--o{ CommunityPosts : has
+    Users ||--o{ Comments : has
+    Articles ||--o{ Comments : has
+    Perspectives ||--o{ Comments : has
+    Users ||--o{ Articles : has
+    Users ||--o{ Vote : has
+    Articles ||--o{ Vote : has
+    Users ||--o{ Perspectives : has

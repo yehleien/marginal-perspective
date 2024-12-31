@@ -3,9 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <title>Post Details</title>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="communities.css">
-    <link rel="stylesheet" href="postDetails.css">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/postDetails.css">
+    <style>
+        .comment-filters {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .perspective-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .filter-button {
+            position: relative;
+            padding-right: 24px;
+        }
+
+        .filter-button::after {
+            content: '▼';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .filter-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background-color: #e9ecef;
+        }
+
+        .filter-button:hover {
+            filter: brightness(0.95);
+        }
+
+        .filter-button.active {
+            box-shadow: inset 0 0 0 2px #007bff;
+        }
+
+        .sort-options {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-select {
+            padding: 6px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .sort-select:hover {
+            border-color: #adb5bd;
+        }
+
+        .sort-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+        }
+
+        .subfilters-container {
+            display: none;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+
+        .subfilter-button {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            background: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .subfilter-button:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+        }
+
+        .subfilter-button.active {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <header class="modern-header">
@@ -31,14 +136,11 @@
                 <button id="downvoteButton" class="vote-button">▼</button>
             </div>
             <div class="post-content">
-                <h1 id="postTitle" class="post-title"></h1>
-                <div class="post-meta">
-                    <span id="postPerspective" class="perspective-tag"></span>
-                    <span id="postDate" class="post-date"></span>
-                </div>
-                <div class="post-content-wrapper">
-                    <p id="postContent" class="post-content"></p>
-                    <button id="expandButton" class="expand-button">Show More</button>
+                <h1 id="postTitle"></h1>
+                <div class="post-metadata">
+                    <span id="postScope" class="post-scope"></span>
+                    <a id="postUrl" href="" target="_blank"></a>
+                    <p id="postContent"></p>
                 </div>
             </div>
         </div>

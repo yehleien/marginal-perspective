@@ -1,53 +1,105 @@
-//const bcrypt = require('bcrypt');
+const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define('User', {
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true // Validates the email format
-      }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false
-      // Consider adding validation for password complexity
-    },
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
-      // Add additional username validations if needed
+  class User extends Model {
+    static associate(models) {
+      // Define associations here
     }
-    // Add other attributes based on your schema
+  }
+
+  User.init({
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    username: DataTypes.STRING,
+    email: DataTypes.STRING,
+    password: DataTypes.STRING,
+    // Add these new fields
+    phoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    birthDate: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    secondaryEmail: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    address: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: {}
+    },
+    profileComplete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    gender: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    politicalAffiliation: {  // Add this
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    politicalAffiliation: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    maritalStatus: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    numberOfChildren: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: 0
+    },
+    education: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: {
+        highSchool: {
+          graduated: false,
+          schoolName: null,
+          graduationYear: null
+        },
+        undergraduate: {
+          graduated: false,
+          schoolName: null,
+          graduationYear: null,
+          degree: null,
+          major: null
+        },
+        graduate: {
+          graduated: false,
+          schoolName: null,
+          graduationYear: null,
+          degree: null,
+          field: null
+        },
+        doctorate: {
+          graduated: false,
+          schoolName: null,
+          graduationYear: null,
+          field: null
+        },
+        medical: {
+          graduated: false,
+          schoolName: null,
+          graduationYear: null,
+          specialty: null
+        }
+      }
+    }
   }, {
-    // Disable timestamps if not needed
-    timestamps: true, // Set to false to disable `createdAt` and `updatedAt`
-    // Other model options
+    sequelize,
+    modelName: 'User'
   });
-
-  User.associate = function(models) {
-     User.belongsToMany(models.Perspective, {
-       through: 'UserPerspective',
-       foreignKey: 'userId',
-       otherKey: 'perspectiveId'
-     });
-    User.hasMany(models.Comment, {
-      foreignKey: 'userId',
-      as: 'comments',
-    });
-    User.hasMany(models.Perspective, {
-      foreignKey: 'userId',
-      as: 'perspectives',
-    });
-  };
-
-  // Define associations here (if any)
-
-  // Define hooks here (if any)
-  // Example: Hashing a password before storing it
 
   return User;
 };

@@ -106,4 +106,246 @@
 
 .error {
     color: #ff4500;
+}
+
+.integrations-container {
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.integrations-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.integrations-table, .integrations-details {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Table styles */
+.integrations-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.integrations-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: #1a1a1b;
+    border-bottom: 2px solid #eef1f5;
+    background: #f8f9fa;
+}
+
+.integrations-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.integrations-table tr:hover {
+    background: #f8f9fa;
+    cursor: pointer;
+}
+
+/* Details panel styles */
+.details-panel {
+    min-height: 400px;
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+.integration-details-content {
+    width: 100%;
+}
+
+.integration-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.integration-detail-icon {
+    width: 64px;
+    height: 64px;
+    margin-right: 20px;
+}
+
+.integration-header h3 {
+    font-size: 24px;
+    margin: 0;
+    color: #1a1a1b;
+}
+
+.integration-status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+.integration-status-badge.connected {
+    background: #e6f4ea;
+    color: #137333;
+}
+
+.integration-status-badge.disconnected {
+    background: #fce8e6;
+    color: #c5221f;
+}
+
+.integration-status-badge.coming_soon {
+    background: #f1f3f4;
+    color: #5f6368;
+}
+
+.integration-metadata {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.metadata-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.metadata-item:last-child {
+    border-bottom: none;
+}
+
+.metadata-label {
+    color: #5f6368;
+    font-size: 14px;
+}
+
+.metadata-value {
+    font-weight: 500;
+    color: #1a1a1b;
+}
+
+.integration-description {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #1a1a1b;
+    margin-bottom: 24px;
+}
+
+.connect-button {
+    background: #0079d3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.connect-button:hover {
+    background: #0061a9;
+}
+
+.connect-button.coming-soon {
+    background: #f6f7f8;
+    color: #878a8c;
+    cursor: not-allowed;
+}
+
+.connect-button.connected {
+    background: #28a745;
+}
+
+.integration-icon {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.integrations-table tr {
+    cursor: pointer;
+}
+
+/* Add disabled state for coming soon rows */
+.integrations-body tr.coming-soon {
+    opacity: 0.6;
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+.integrations-body tr.coming-soon:hover {
+    background-color: #f8f9fa;
+}
+
+/* Make selected state more visible */
+.integrations-body tr.selected {
+    background-color: #e8f0fe;
+}
+
+.integrations-body tr.selected:hover {
+    background-color: #e8f0fe;
+}
+
+.integration-map-section {
+    margin-top: 40px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.integration-map-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+}
+
+.integration-map-table th,
+.integration-map-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.integration-map-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #1a1a1b;
+}
+
+.perspectives-column {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.perspective-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.perspective-type {
+    font-weight: 500;
+}
+
+.perspective-category {
+    color: #666;
+    font-size: 12px;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
 } 

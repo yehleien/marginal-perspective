@@ -3,7 +3,7 @@
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin: 20px;
     display: flex;
 }
 
@@ -51,6 +51,10 @@
     overflow: hidden;
     transition: max-height 0.3s ease;
     flex: 1;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .post-content.expanded {
@@ -68,10 +72,11 @@
 }
 
 .comment-form {
-    margin-bottom: 24px;
+    margin: 20px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background: #fff;
+    padding: 20px;
 }
 
 .comment-form textarea {
@@ -98,7 +103,7 @@
     display: flex;
     padding: 8px 0;
     border-left: 1px solid #edeff1;
-    margin-left: 24px;
+    margin: 20px;
 }
 
 .comment-votes {
@@ -183,7 +188,7 @@
 }
 
 .comments-container {
-    margin-top: 20px;
+    margin: 20px;
 }
 
 .vote-container {
@@ -221,7 +226,7 @@
 }
 
 .reply-form {
-    margin: 8px 0;
+    margin: 20px 0 20px 20px;
     border: 1px solid #edeff1;
     border-radius: 4px;
     background: #fff;
@@ -276,4 +281,42 @@
 
 .cancel-reply-button:hover {
     background: #f5f9ff;
+}
+
+.comments-section {
+    margin: 20px;
+}
+
+.post-content h1 {
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.post-metadata {
+    margin-top: 10px;
+}
+
+.post-metadata a {
+    color: #0066cc;
+    text-decoration: none;
+    word-break: break-all;
+    margin-bottom: 15px;
+    display: block;
+}
+
+#postContent {
+    margin-top: 20px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.post-scope {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 0 8px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #666;
+    text-transform: capitalize;
 }

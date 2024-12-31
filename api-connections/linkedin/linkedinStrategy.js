@@ -6,15 +6,15 @@ const { generateLinkedInPerspectives } = require('./linkedinPerspectives');
 const LinkedInStrategy = new OAuth2Strategy({
     authorizationURL: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenURL: 'https://www.linkedin.com/oauth/v2/accessToken',
-    clientID: process.env.LINKEDIN_CLIENT_ID,
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-    callbackURL: process.env.LINKEDIN_REDIRECT_URI,
-    scope: ['openid', 'profile', 'email', 'r_liteprofile', 'r_basicprofile'],
+    clientID: '86r29l0bjv9g7i',
+    clientSecret: 'WPL_AP1.vLw4NduG57NloVqg.h3v81Q==',
+    callbackURL: 'http://localhost:3000/auth/linkedin/callback',
+    scope: ['r_liteprofile', 'r_emailaddress', 'w_member_social'],
     state: true
 }, async (accessToken, refreshToken, params, profile, done) => {
     try {
         // Get basic profile info
-        const userResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
+        const userResponse = await fetch('https://api.linkedin.com/v2/me', {
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
@@ -24,34 +24,32 @@ const LinkedInStrategy = new OAuth2Strategy({
             throw new Error(`LinkedIn API error: ${userResponse.status}`);
         }
 
-        // Get professional profile info
-        const profileResponse = await fetch('https://api.linkedin.com/v2/me', {
+        const userData = await userResponse.json();
+        
+        // Get email address
+        const emailResponse = await fetch('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', {
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'X-Restli-Protocol-Version': '2.0.0'
+                'Authorization': `Bearer ${accessToken}`
             }
         });
 
-        if (!profileResponse.ok) {
-            throw new Error(`LinkedIn Profile API error: ${profileResponse.status}`);
+        if (!emailResponse.ok) {
+            throw new Error(`LinkedIn Email API error: ${emailResponse.status}`);
         }
 
-        const userData = await userResponse.json();
-        const profileData = await profileResponse.json();
-        
-        console.log('LinkedIn user data:', userData);
-        console.log('LinkedIn profile data:', profileData);
+        const emailData = await emailResponse.json();
+        const email = emailData.elements[0]['handle~'].emailAddress;
 
         const [user, created] = await User.findOrCreate({
-            where: { email: userData.email },
+            where: { email: email },
             defaults: {
-                username: `${userData.given_name} ${userData.family_name}`,
-                email: userData.email,
+                username: `${userData.localizedFirstName} ${userData.localizedLastName}`,
+                email: email,
                 password: 'linkedin-auth'
             }
         });
 
-        await generateLinkedInPerspectives(user.id, accessToken, profileData);
+        await generateLinkedInPerspectives(user.id, accessToken);
         return done(null, user);
     } catch (error) {
         console.error('LinkedIn Auth Error:', error);
