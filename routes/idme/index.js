@@ -16,7 +16,7 @@ router.get('/button', (req, res) => {
 router.get('/auth-params', (req, res) => {
     const params = {
         clientId: process.env.IDME_CLIENT_ID || '9b1da5b436e632efe996a25950e36baa',
-        redirectUri: 'http://localhost:3000/idme/callback',
+        redirectUri: 'https://marginalperspective.com/idme/callback',
         scope: 'identity'
     };
     console.log('Auth params being sent:', params);
