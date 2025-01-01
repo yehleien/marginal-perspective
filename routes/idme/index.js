@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const { User, IdmeToken, IdmeProfile } = require('../../models');
+const { createIdmePerspectives } = require('../../api-connections/idme/idmePerspectives');
 
 const CLIENT_ID = process.env.IDME_CLIENT_ID;
 const CLIENT_SECRET = process.env.IDME_CLIENT_SECRET;
@@ -19,7 +21,7 @@ router.get('/auth-params', (req, res) => {
     const params = {
         clientId: process.env.IDME_CLIENT_ID || '9b1da5b436e632efe996a25950e36baa',
         redirectUri: 'https://marginalperspective.com/idme/callback',
-        scope: 'identity',
+        scope: 'student',
         state: state
     };
     console.log('Auth params being sent:', params);
@@ -57,7 +59,7 @@ router.get('/callback', async (req, res) => {
         });
 
         console.log('Token received. Getting user profile...');
-        const { access_token } = tokenResponse.data;
+        const { access_token, refresh_token, expires_in } = tokenResponse.data;
 
         const profileResponse = await axios.get('https://api.id.me/api/public/v3/attributes.json', {
             headers: {
@@ -65,9 +67,41 @@ router.get('/callback', async (req, res) => {
             }
         });
 
-        console.log('Profile received:', profileResponse.data);
-        req.session.idmeProfile = profileResponse.data;
-        
+        const userData = profileResponse.data;
+        console.log('Profile received:', userData);
+
+        // Save or update the user
+        const [user, created] = await User.findOrCreate({
+            where: { email: userData.email },
+            defaults: {
+                username: userData.name,
+                email: userData.email,
+                password: 'idme-auth'
+            }
+        });
+
+        // Save the token
+        const expiresAt = new Date(Date.now() + expires_in * 1000);
+        await IdmeToken.upsert({
+            userId: user.id,
+            accessToken: access_token,
+            refreshToken: refresh_token,
+            expiresAt
+        });
+
+        // Save or update the ID.me profile
+        await IdmeProfile.upsert({
+            userId: user.id,
+            verified: true,
+            attributes: userData.attributes || {},
+            status: userData.status || [],
+            education: userData.education || {}
+        });
+
+        // Create perspectives based on the ID.me data
+        await createIdmePerspectives(user.id, userData);
+
+        req.session.idmeProfile = userData;
         res.redirect('/account');
 
     } catch (error) {

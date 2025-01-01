@@ -515,7 +515,7 @@ function connectIdMe() {
 async function handleIdMeCallback() {
     try {
         const response = await fetch('/idme/callback', {
-            method: 'POST',
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -529,6 +529,7 @@ async function handleIdMeCallback() {
         }
     } catch (error) {
         console.error('Error handling ID.me callback:', error);
+        document.getElementById('idmeStatus').textContent = 'Connection Failed';
     }
 }
 
