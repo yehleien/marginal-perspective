@@ -6,6 +6,8 @@ const CLIENT_ID = process.env.IDME_CLIENT_ID;
 const CLIENT_SECRET = process.env.IDME_CLIENT_SECRET;
 const REDIRECT_URI = 'https://marginalperspective.com/idme/callback';
 
+const state = 'someRandomState'; // You can generate a random state for security
+
 router.get('/button', (req, res) => {
     res.render('idme/button', {
         clientId: CLIENT_ID,
@@ -17,7 +19,8 @@ router.get('/auth-params', (req, res) => {
     const params = {
         clientId: process.env.IDME_CLIENT_ID || '9b1da5b436e632efe996a25950e36baa',
         redirectUri: 'https://marginalperspective.com/idme/callback',
-        scope: 'identity'
+        scope: 'identity',
+        state: state
     };
     console.log('Auth params being sent:', params);
     res.json(params);
@@ -72,5 +75,9 @@ router.get('/callback', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Add logging to verify environment variables
+console.log('Client ID:', CLIENT_ID);
+console.log('Redirect URI:', REDIRECT_URI);
 
 module.exports = router; 
