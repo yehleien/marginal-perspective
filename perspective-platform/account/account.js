@@ -507,7 +507,7 @@ function connectFacebook() {
 
 function connectIdMe() {
     // Redirect to ID.me authentication
-    const idmeUrl = 'https://groups.id.me/?client_id=YOUR_CLIENT_ID&redirect_uri=https://marginalperspective.com/idme/callback&response_type=code&scope=openid';
+    const idmeUrl = `https://groups.id.me/?client_id=${process.env.IDME_CLIENT_ID}&redirect_uri=https://marginalperspective.com/idme/callback&response_type=code&scope=openid`;
     window.location.href = idmeUrl;
 }
 
