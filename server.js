@@ -370,6 +370,6 @@ passport.deserializeUser(async (id, done) => {
 // Add the LinkedIn routes
 app.use('/auth/linkedin', linkedinRoutes);
 
-const userPerspectiveRoutes = require('./routes/userPerspective');
+const userPerspectiveRoutes = require('./routes/UserPerspective');
 app.use('/UserPerspective', userPerspectiveRoutes);
 
