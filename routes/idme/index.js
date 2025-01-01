@@ -4,9 +4,7 @@ const axios = require('axios');
 
 const CLIENT_ID = process.env.IDME_CLIENT_ID;
 const CLIENT_SECRET = process.env.IDME_CLIENT_SECRET;
-const REDIRECT_URI = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:3000/idme/callback'
-  : 'https://marginalperspective.com/idme/callback';
+const REDIRECT_URI = 'https://marginalperspective.com/idme/callback';
 
 router.get('/button', (req, res) => {
     res.render('idme/button', {

@@ -8,9 +8,7 @@ const IdMeStrategy = new OAuth2Strategy({
     tokenURL: 'https://api.id.me/oauth/token',
     clientID: process.env.IDME_CLIENT_ID,
     clientSecret: process.env.IDME_CLIENT_SECRET,
-    callbackURL: process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:3000/idme/callback'
-        : 'https://marginalperspective.com/idme/callback',
+    callbackURL: 'https://marginalperspective.com/idme/callback',
     scope: 'identity'
 }, async (accessToken, refreshToken, profile, done) => {
     try {
