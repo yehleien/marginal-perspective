@@ -507,9 +507,7 @@ function connectFacebook() {
 
 function connectIdMe() {
     // Redirect to ID.me authentication
-    const clientId = '<%= clientId %>'; // Pass the client ID from the server
-    const redirectUri = '<%= redirectUri %>';
-    const idmeUrl = `https://groups.id.me/?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid`;
+    const idmeUrl = 'https://groups.id.me/?client_id=9b1da5b436e632efe996a25950e36baa&redirect_uri=https://marginalperspective.com/idme/callback&response_type=code&scope=openid';
     window.location.href = idmeUrl;
 }
 
