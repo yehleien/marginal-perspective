@@ -70,12 +70,22 @@ router.get('/callback', async (req, res) => {
         const userData = profileResponse.data;
         console.log('Profile received:', userData);
 
+        // Extract user information from attributes
+        const email = userData.attributes.find(attr => attr.handle === 'email')?.value;
+        const firstName = userData.attributes.find(attr => attr.handle === 'fname')?.value;
+        const lastName = userData.attributes.find(attr => attr.handle === 'lname')?.value;
+        const name = `${firstName} ${lastName}`;
+
+        if (!email) {
+            throw new Error('No email received from ID.me');
+        }
+
         // Save or update the user
         const [user, created] = await User.findOrCreate({
-            where: { email: userData.email },
+            where: { email },
             defaults: {
-                username: userData.name,
-                email: userData.email,
+                username: name,
+                email,
                 password: 'idme-auth'
             }
         });
