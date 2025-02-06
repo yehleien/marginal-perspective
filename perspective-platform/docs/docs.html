@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Marginal Perspective</title>
+    <title>Documentation - Marginal Perspective</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="docs.css">
+    <link rel="stylesheet" href="markdown.css">
 </head>
 <body>
     <header class="modern-header">
@@ -21,27 +22,24 @@
             <a href="/submit" class="header-link">Submit</a>
             <a href="/home" class="header-link">Home</a>
             <a href="/docs" class="header-link">Docs</a>
-            <a href="/login" class="header-link" id="authButton">Login / Sign Up</a>
+            <a href="/index" class="header-link" id="authButton">Login / Sign Up</a>
         </nav>
     </header>
-
-    <div class="login-container">
-        <div class="login-box">
-            <h1>Welcome Back</h1>
-            <form id="loginForm">
-                <div class="form-group">
-                    <input type="text" id="loginUsername" placeholder="Username" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" id="loginPassword" placeholder="Password" required>
-                </div>
-                <button type="submit" class="login-button">Login</button>
-            </form>
-            <div class="auth-links">
-                <p>Don't have an account? <a href="/signup.html">Sign Up</a></p>
-            </div>
+    
+    <div class="docs-container">
+        <div class="docs-sidebar">
+            <h3>Documentation</h3>
+            <nav class="docs-nav">
+                <ul id="docsMenu">
+                    <!-- Menu items will be populated by docs.js -->
+                </ul>
+            </nav>
+        </div>
+        <div class="docs-content" id="docsContent">
+            <!-- Content will be loaded here -->
         </div>
     </div>
+    <script src="docs.js"></script>
     <script src="/index/auth.js"></script>
 </body>
-</html>
+</html> 

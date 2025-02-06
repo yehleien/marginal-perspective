@@ -140,21 +140,71 @@ function handleChange(name, value, age = null) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ... existing initialization code ...
+    console.log('DOM Content Loaded');
+    
+    // Get all add email buttons
+    const addEmailBtns = document.querySelectorAll('.add-email-button');
+    
+    addEmailBtns.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            console.log('Add email button clicked');
+            const emailInput = btn.previousElementSibling;
+            const email = emailInput.value;
 
-    // Add tab handling for all tabs
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+
+            try {
+                const response = await fetch('/account/add-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    emailInput.value = '';
+                    const codeSent = await sendVerificationCode(email);
+                    if (!codeSent) {
+                        alert('Email added but failed to send verification code');
+                    }
+                    await loadEmails(); // Refresh the list
+                } else {
+                    alert(result.error || 'Failed to add email');
+                }
+            } catch (error) {
+                console.error('Error adding email:', error);
+                alert('Failed to add email');
+            }
+        });
+    });
+
+    // Initial load of emails
+    console.log('Loading initial emails...');
+    await loadEmails();
+
+    // Add tab handling for profile tab
+    document.getElementById('profileTab').addEventListener('click', async function() {
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+        document.getElementById('profileContent').classList.add('active');
+        this.classList.add('active');
+        await loadEmails(); // Only load emails when profile tab is active
+    });
+
+    // Add tab handling for perspectives tab
     document.getElementById('perspectivesTab').addEventListener('click', function() {
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
         document.getElementById('perspectivesContent').classList.add('active');
         this.classList.add('active');
-    });
-
-    document.getElementById('profileTab').addEventListener('click', function() {
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-        document.getElementById('profileContent').classList.add('active');
-        this.classList.add('active');
+        loadPerspectives(); // Only load perspectives when perspectives tab is active
     });
 
     document.getElementById('activityTab').addEventListener('click', function() {
@@ -174,7 +224,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load user profile
     await loadUserProfile();
 
-    loadPerspectives();
+    // Sidebar navigation logic
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', () => {
+            // Hide all sections
+            document.querySelectorAll('.profile-section').forEach(section => section.style.display = 'none');
+            // Remove active class from all sidebar items
+            document.querySelectorAll('.sidebar-item').forEach(sidebarItem => sidebarItem.classList.remove('active'));
+            // Show the selected section
+            const sectionId = item.getAttribute('data-section');
+            document.getElementById(`section-${sectionId}`).style.display = 'block';
+            // Add active class to the clicked sidebar item
+            item.classList.add('active');
+        });
+    });
+
+    // Show the first section by default
+    document.querySelector('.sidebar-item').click();
 });
 
 async function loadUserProfile() {
@@ -265,72 +331,128 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
             state: document.getElementById('state').value,
             zipCode: document.getElementById('zipCode').value,
             country: 'United States'
-        }
+        },
+        // Employment History
+        employmentHistory: Array.from(document.querySelectorAll('.employment-entry')).map(entry => ({
+            companyName: entry.querySelector('.company-name').value,
+            jobTitle: entry.querySelector('.job-title').value,
+            startDate: entry.querySelector('.start-date').value,
+            endDate: entry.querySelector('.end-date').value,
+            salary: entry.querySelector('.salary').value
+        })),
+        // Financial Information
+        incomeRange: document.getElementById('incomeRange').value,
+        investments: Array.from(document.querySelectorAll('.investment-entry')).map(entry => ({
+            type: entry.querySelector('.investment-type').value,
+            symbol: entry.querySelector('.investment-symbol').value,
+            quantity: entry.querySelector('.investment-quantity').value,
+            purchasePrice: entry.querySelector('.investment-price').value
+        })),
+        mortgages: Array.from(document.querySelectorAll('.mortgage-entry')).map(entry => ({
+            propertyAddress: entry.querySelector('.property-address').value,
+            loanAmount: entry.querySelector('.loan-amount').value,
+            interestRate: entry.querySelector('.interest-rate').value,
+            startDate: entry.querySelector('.mortgage-start').value,
+            loanTerm: entry.querySelector('.loan-term').value
+        })),
+        vehicles: Array.from(document.querySelectorAll('.vehicle-entry')).map(entry => ({
+            make: entry.querySelector('.vehicle-make').value,
+            model: entry.querySelector('.vehicle-model').value,
+            year: entry.querySelector('.vehicle-year').value,
+            vin: entry.querySelector('.vehicle-vin').value
+        })),
+        // Additional Personal Information
+        religion: document.getElementById('religion').value,
+        votingHistory: Array.from(document.querySelectorAll('.voting-entry')).map(entry => ({
+            election: entry.querySelector('.election-name').value,
+            date: entry.querySelector('.election-date').value,
+            method: entry.querySelector('.voting-method').value,
+            jurisdiction: entry.querySelector('.voting-jurisdiction').value
+        }))
     };
 
     await saveProfile(formData);
 });
 
 async function loadEmails() {
+    const emailsList = document.getElementById('emailsList');
+    
     try {
         const response = await fetch('/account/emails', {
             credentials: 'include'
         });
         const emails = await response.json();
         
-        const emailsList = document.getElementById('emailsList');
         emailsList.innerHTML = '';
         
         emails.forEach(email => {
-            const emailEntry = document.createElement('div');
-            emailEntry.className = `email-entry ${email.isPrimary ? 'primary' : ''}`;
-            
-            emailEntry.innerHTML = `
-                <span class="email-text">${email.email}</span>
-                <span class="verification-badge ${email.isVerified ? 'verified' : ''}">
-                    ${email.isVerified ? 'Verified' : 'Pending'}
-                </span>
-                ${email.isPrimary ? '<span class="primary-badge">Primary</span>' : ''}
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${email.email}</td>
+                <td><span class="verification-badge ${email.isVerified ? 'verified' : 'pending'}">${email.isVerified ? 'Verified' : 'Pending'}</span></td>
+                <td>${email.isPrimary ? '<span class="primary-badge">Primary</span>' : ''}</td>
+                <td>
+                    <div class="verification-actions">
+                        ${!email.isVerified ? `
+                            <input type="text" class="verification-code-input" placeholder="Enter code">
+                            <button onclick="sendVerificationCode('${email.email}')" class="verify-btn">Send Code</button>
+                            <button onclick="verifyCode('${email.email}', this.previousElementSibling.previousElementSibling.value)" class="verify-btn">Verify</button>
+                        ` : ''}
+                        ${!email.isPrimary ? `<button onclick="deleteEmail('${email.email}')" class="delete-btn">Delete</button>` : ''}
+                    </div>
+                </td>
             `;
-            
-            emailsList.appendChild(emailEntry);
+            emailsList.appendChild(row);
         });
     } catch (error) {
         console.error('Error loading emails:', error);
     }
 }
 
-document.getElementById('addEmailBtn').addEventListener('click', async () => {
-    const newEmail = document.getElementById('newEmail').value.trim();
-    if (!newEmail) return;
-    
+async function verifyCode(email, code) {
     try {
-        const response = await fetch('/account/add-email', {
+        const response = await fetch('/auth/email/verify-code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({ email: newEmail })
+            body: JSON.stringify({ email, code })
         });
+
+        const result = await response.json();
         
-        if (response.ok) {
-            document.getElementById('newEmail').value = '';
-            await loadEmails();
+        if (result.success) {
+            await loadEmails(); // Refresh the list
         } else {
-            const error = await response.json();
-            alert(error.error || 'Failed to add email');
+            alert(result.error || 'Invalid verification code');
         }
     } catch (error) {
-        console.error('Error adding email:', error);
-        alert('Failed to add email');
+        console.error('Error verifying email:', error);
+        alert('Failed to verify email');
     }
-});
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    loadEmails();
-    // ... existing code ...
-});
+async function sendVerificationCode(email) {
+    try {
+        console.log('Attempting to send verification code to:', email);
+        const response = await fetch('/auth/email/send-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email })
+        });
+        
+        const result = await response.json();
+        console.log('Send verification response:', result);
+        
+        if (!response.ok) throw new Error('Failed to send code');
+        return true;
+    } catch (error) {
+        console.error('Error sending verification code:', error);
+        return false;
+    }
+}
 
 async function generatePerspectives() {
     try {
@@ -530,6 +652,167 @@ async function handleIdMeCallback() {
     } catch (error) {
         console.error('Error handling ID.me callback:', error);
         document.getElementById('idmeStatus').textContent = 'Connection Failed';
+    }
+}
+
+// Employment History Handlers
+document.getElementById('addEmploymentBtn').addEventListener('click', () => {
+    const employmentList = document.getElementById('employmentList');
+    const employmentEntry = document.createElement('div');
+    employmentEntry.className = 'employment-entry';
+    employmentEntry.innerHTML = `
+        <div class="form-group">
+            <input type="text" placeholder="Company Name" class="company-name">
+            <input type="text" placeholder="Title" class="job-title">
+            <input type="date" class="start-date">
+            <input type="date" class="end-date">
+            <input type="number" placeholder="Annual Salary" class="salary">
+            <button type="button" class="verify-btn" data-field="employment">Verify Employment</button>
+            <button type="button" class="remove-btn">Remove</button>
+        </div>
+    `;
+    employmentList.appendChild(employmentEntry);
+});
+
+// Investment Holdings Handlers
+document.getElementById('addInvestmentBtn').addEventListener('click', () => {
+    const investmentList = document.getElementById('investmentList');
+    const investmentEntry = document.createElement('div');
+    investmentEntry.className = 'investment-entry';
+    investmentEntry.innerHTML = `
+        <div class="form-group">
+            <select class="investment-type">
+                <option value="">Select Type</option>
+                <option value="stocks">Stocks</option>
+                <option value="bonds">Bonds</option>
+                <option value="mutual-funds">Mutual Funds</option>
+                <option value="etfs">ETFs</option>
+                <option value="crypto">Cryptocurrency</option>
+            </select>
+            <input type="text" placeholder="Symbol/Description" class="investment-symbol">
+            <input type="number" placeholder="Quantity" class="investment-quantity">
+            <input type="number" placeholder="Purchase Price" class="investment-price">
+            <button type="button" class="verify-btn" data-field="investment">Verify Holdings</button>
+            <button type="button" class="remove-btn">Remove</button>
+        </div>
+    `;
+    investmentList.appendChild(investmentEntry);
+});
+
+// Mortgage Information Handlers
+document.getElementById('addMortgageBtn').addEventListener('click', () => {
+    const mortgageList = document.getElementById('mortgageList');
+    const mortgageEntry = document.createElement('div');
+    mortgageEntry.className = 'mortgage-entry';
+    mortgageEntry.innerHTML = `
+        <div class="form-group">
+            <input type="text" placeholder="Property Address" class="property-address">
+            <input type="number" placeholder="Loan Amount" class="loan-amount">
+            <input type="number" placeholder="Interest Rate" class="interest-rate" step="0.01">
+            <input type="date" placeholder="Start Date" class="mortgage-start">
+            <input type="number" placeholder="Term (years)" class="loan-term">
+            <button type="button" class="verify-btn" data-field="mortgage">Verify Mortgage</button>
+            <button type="button" class="remove-btn">Remove</button>
+        </div>
+    `;
+    mortgageList.appendChild(mortgageEntry);
+});
+
+// Vehicle Ownership Handlers
+document.getElementById('addVehicleBtn').addEventListener('click', () => {
+    const vehicleList = document.getElementById('vehicleList');
+    const vehicleEntry = document.createElement('div');
+    vehicleEntry.className = 'vehicle-entry';
+    vehicleEntry.innerHTML = `
+        <div class="form-group">
+            <input type="text" placeholder="Make" class="vehicle-make">
+            <input type="text" placeholder="Model" class="vehicle-model">
+            <input type="number" placeholder="Year" class="vehicle-year">
+            <input type="text" placeholder="VIN" class="vehicle-vin">
+            <button type="button" class="verify-btn" data-field="vehicle">Verify Vehicle</button>
+            <button type="button" class="remove-btn">Remove</button>
+        </div>
+    `;
+    vehicleList.appendChild(vehicleEntry);
+});
+
+// Voting History Handlers
+document.getElementById('addVotingBtn').addEventListener('click', () => {
+    const votingList = document.getElementById('votingList');
+    const votingEntry = document.createElement('div');
+    votingEntry.className = 'voting-entry';
+    votingEntry.innerHTML = `
+        <div class="form-group">
+            <input type="text" placeholder="Election" class="election-name">
+            <input type="date" placeholder="Date" class="election-date">
+            <select class="voting-method">
+                <option value="">Select Method</option>
+                <option value="in-person">In Person</option>
+                <option value="mail">Mail</option>
+                <option value="early">Early Voting</option>
+            </select>
+            <input type="text" placeholder="Jurisdiction" class="voting-jurisdiction">
+            <button type="button" class="verify-btn" data-field="voting">Verify Voting Record</button>
+            <button type="button" class="remove-btn">Remove</button>
+        </div>
+    `;
+    votingList.appendChild(votingEntry);
+});
+
+// Add remove button handlers
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-btn')) {
+        e.target.closest('.form-group').remove();
+    }
+});
+
+// Add verification modal HTML to account.html
+const verificationModal = document.createElement('div');
+verificationModal.id = 'verificationModal';
+verificationModal.className = 'modal';
+verificationModal.innerHTML = `
+    <div class="modal-content">
+        <h2>Verify Email</h2>
+        <p>Enter the 6-digit code sent to your email:</p>
+        <input type="text" id="verificationCode" maxlength="6" pattern="[0-9]*">
+        <button onclick="submitVerificationCode()">Submit</button>
+        <button onclick="closeVerificationModal()">Cancel</button>
+    </div>
+`;
+document.body.appendChild(verificationModal);
+
+let currentEmailVerifying = null;
+
+async function submitVerificationCode() {
+    const code = document.getElementById('verificationCode').value;
+    if (await verifyCode(currentEmailVerifying, code)) {
+        closeVerificationModal();
+        loadEmails(); // Refresh the email list
+    } else {
+        alert('Invalid verification code');
+    }
+}
+
+function closeVerificationModal() {
+    document.getElementById('verificationModal').style.display = 'none';
+    currentEmailVerifying = null;
+}
+
+async function deleteEmail(email) {
+    try {
+        const response = await fetch(`/account/emails/${encodeURIComponent(email)}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            await loadEmails(); // Refresh the list
+        } else {
+            throw new Error('Failed to delete email');
+        }
+    } catch (error) {
+        console.error('Error deleting email:', error);
+        alert('Failed to delete email');
     }
 }
 

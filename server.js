@@ -1,9 +1,9 @@
+const path = require('path');
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
-const path = require('path');
 const cookieParser = require('cookie-parser');
 const { sequelize, User } = require('./models');
 const bcrypt = require('bcrypt');
@@ -193,6 +193,7 @@ app.get('/insights', (_req, res) => res.sendFile(path.join(__dirname, 'perspecti
 app.get('/communities', (_req, res) => {
     res.sendFile(path.join(__dirname, 'perspective-platform', 'communities', 'communities.html'));
 });
+app.get('/docs', (_req, res) => res.sendFile(path.join(__dirname, 'perspective-platform', 'docs', 'docs.html')));
 app.listen(port, () => console.log(`Server is running at http://localhost:${port}`));
 
 // Add body parser middleware
@@ -372,4 +373,70 @@ app.use('/auth/linkedin', linkedinRoutes);
 
 const userPerspectiveRoutes = require('./routes/UserPerspective');
 app.use('/UserPerspective', userPerspectiveRoutes);
+
+const fs = require('fs').promises;
+const marked = require('marked'); // You'll need to install this package
+
+const DOCS_PATH = process.env.NODE_ENV === 'production' 
+    ? path.join(__dirname, 'docs')  // Production path
+    : process.env.OBSIDIAN_VAULT_PATH;  // Local development path (your Obsidian vault)
+
+// Get the structure of your docs (list of available pages)
+app.get('/api/docs/structure', async (req, res) => {
+    try {
+        const docsPath = DOCS_PATH;
+        const files = await fs.readdir(docsPath);
+        
+        const docsStructure = await Promise.all(
+            files
+                .filter(file => file.endsWith('.md'))
+                .map(async file => {
+                    const filePath = path.join(docsPath, file);
+                    const content = await fs.readFile(filePath, 'utf-8');
+                    // Get the first # header from the content
+                    const headerMatch = content.match(/^#\s+(.+)$/m);
+                    const title = headerMatch ? headerMatch[1] : file.replace('.md', '');
+                    return {
+                        slug: file.replace('.md', ''),
+                        title: title
+                    };
+                })
+        );
+        
+        res.json(docsStructure);
+    } catch (error) {
+        console.error('Error reading docs structure:', error);
+        res.status(500).json({ error: 'Failed to read docs structure' });
+    }
+});
+
+// Get the content of a specific doc
+app.get('/api/docs/content/:slug', async (req, res) => {
+    try {
+        const filePath = path.join(DOCS_PATH, `${req.params.slug}.md`);
+        const content = await fs.readFile(filePath, 'utf-8');
+        const html = marked(content);
+        res.send(html);
+    } catch (error) {
+        console.error('Error reading doc content:', error);
+        res.status(404).send('Document not found');
+    }
+});
+
+const nodemailer = require('nodemailer');
+
+// Configure email transporter
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_APP_PASSWORD // Use Gmail App Password
+    }
+});
+
+// Add with other requires at top
+const emailRoutes = require('./routes/auth/email');
+
+// Add with other app.use statements
+app.use('/auth/email', emailRoutes);
 

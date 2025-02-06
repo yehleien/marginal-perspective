@@ -412,3 +412,349 @@ h1#welcomeMessage {
     margin-top: 20px;
     overflow-x: auto;
 }
+
+/* New Section Styles */
+.employment-section,
+.financial-section,
+.personal-section {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin: 30px 0;
+}
+
+.employment-entry,
+.investment-entry,
+.mortgage-entry,
+.vehicle-entry,
+.voting-entry {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.add-button {
+    background: #0079d3;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s ease;
+}
+
+.add-button:hover {
+    background: #005fa3;
+}
+
+.remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-left: 10px;
+}
+
+.remove-btn:hover {
+    background: #c82333;
+}
+
+/* Form Input Styles */
+.employment-entry input,
+.investment-entry input,
+.investment-entry select,
+.mortgage-entry input,
+.vehicle-entry input,
+.voting-entry input,
+.voting-entry select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.employment-entry input[type="date"],
+.mortgage-entry input[type="date"],
+.voting-entry input[type="date"] {
+    min-width: 150px;
+}
+
+.employment-entry input[type="number"],
+.investment-entry input[type="number"],
+.mortgage-entry input[type="number"] {
+    width: 150px;
+}
+
+.investment-entry select,
+.voting-entry select {
+    min-width: 150px;
+}
+
+/* Verification Button Styles */
+.verify-btn {
+    padding: 6px 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    margin-right: 10px;
+}
+
+.verify-btn:hover {
+    background: #218838;
+}
+
+/* Responsive Design for New Sections */
+@media (max-width: 768px) {
+    .employment-entry,
+    .investment-entry,
+    .mortgage-entry,
+    .vehicle-entry,
+    .voting-entry {
+        padding: 15px;
+    }
+
+    .employment-entry input,
+    .investment-entry input,
+    .investment-entry select,
+    .mortgage-entry input,
+    .vehicle-entry input,
+    .voting-entry input,
+    .voting-entry select {
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .verify-btn,
+    .remove-btn {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 500px;
+}
+
+.verification-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-left: 10px;
+}
+
+.verification-badge.verified {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.verification-badge:not(.verified) {
+    background-color: #ffd700;
+    color: black;
+}
+
+/* Add these styles */
+.emails-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.emails-table th,
+.emails-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.emails-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #1a1a1b;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-left: 10px;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+}
+
+.verification-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.verification-code-input {
+    width: 100px;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.primary-badge {
+    background: #0079d3;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.emails-section {
+    display: none;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#profileContent.active .emails-section {
+    display: block;
+}
+
+.add-email-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.add-email-form input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.add-email-button {
+    padding: 8px 16px;
+    background: #0079d3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.add-email-button:hover {
+    background: #0061a9;
+}
+
+/* Profile Content Layout */
+#profileContent {
+    display: none;
+}
+
+#profileContent.active {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+}
+
+.profile-sidebar {
+    width: 200px;
+    padding: 1rem;
+    border-right: 1px solid #eee;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#profileContent.active .profile-sidebar {
+    display: block;
+}
+
+.profile-content {
+    flex: 1;
+    padding: 1rem;
+}
+
+/* Emails Table Styles */
+.emails-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.emails-table th,
+.emails-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #eef1f5;
+}
+
+.emails-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #1a1a1b;
+}
+
+.emails-table tr:hover {
+    background-color: #f1f3f5;
+    cursor: pointer;
+}
+
+/* Add these new styles */
+#perspectivesContent.active {
+    display: block;
+}
+
+.sidebar-item {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.sidebar-item:hover {
+    background: #e9ecef;
+}
+
+.sidebar-item.active {
+    background: #0079d3;
+    color: white;
+}

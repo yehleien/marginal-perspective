@@ -9,6 +9,9 @@
     <link rel="icon" type="image/x-icon" href="../assets/favicon.png">
 </head>
 <body>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+
     <header class="modern-header">
         <div class="logo">
             <a href="/home">
@@ -21,6 +24,7 @@
             <a href="/account" class="header-link">Account</a>
             <a href="/submit" class="header-link">Submit</a>
             <a href="/home" class="header-link">Home</a>
+            <a href="/docs" class="header-link">Docs</a>
             <a href="/index" class="header-link" id="authButton">Login / Sign Up</a>
         </nav>
     </header>
@@ -74,17 +78,38 @@
         </div>
 
         <div id="profileContent" class="tab-content">
-            <div class="profile-section">
-                <h2>Profile Information</h2>
-                <form id="profileForm" class="profile-form">
-                    <div class="form-group">
-                        <label for="primaryEmail">Primary Email</label>
-                        <div class="input-with-verification">
-                            <input type="email" id="primaryEmail" name="primaryEmail" readonly class="readonly-input">
-                            <span class="verification-badge verified">Verified</span>
-                        </div>
+            <div class="profile-sidebar">
+                <button class="sidebar-item" data-section="emails">📧 Email Addresses</button>
+                <button class="sidebar-item" data-section="phones">📱 Phone Numbers</button>
+                <button class="sidebar-item" data-section="locations">📍 Locations</button>
+                <button class="sidebar-item" data-section="education">🎓 Education</button>
+                <button class="sidebar-item" data-section="personal">👤 Personal Info</button>
+                <button class="sidebar-item" data-section="finance">💰 Financial</button>
+            </div>
+            <div class="profile-content">
+                <div id="section-emails" class="profile-section">
+                    <h2>Email Addresses</h2>
+                    <div class="add-email-form">
+                        <input type="email" id="newEmail" placeholder="Add another email address">
+                        <button type="button" id="addEmailBtn" class="add-email-button">Add Email</button>
                     </div>
+                    <table class="emails-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Primary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emailsList">
+                            <!-- Emails will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
 
+                <div id="section-phones" class="profile-section">
+                    <h2>Phone Numbers</h2>
                     <div class="form-group">
                         <label for="phoneNumber">Phone Number</label>
                         <div class="input-with-verification">
@@ -92,15 +117,10 @@
                             <button type="button" class="verify-btn" data-field="phone">Verify</button>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="birthDate">Birth Date</label>
-                        <div class="input-with-verification">
-                            <input type="date" id="birthDate" name="birthDate">
-                            <span class="verification-badge pending">Pending ID Verification</span>
-                        </div>
-                    </div>
-                    
+                </div>
+
+                <div id="section-locations" class="profile-section">
+                    <h2>Locations</h2>
                     <div class="form-group location-fields">
                         <label>Location</label>
                         <div class="location-group">
@@ -112,51 +132,11 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="gender">Gender</label>
-                        <select id="gender" name="gender" class="form-input">
-                            <option value="">Select gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="non-binary">Non-binary</option>
-                            <option value="other">Other</option>
-                            <option value="prefer-not-to-say">Prefer not to say</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="politicalAffiliation">Political Affiliation</label>
-                        <select id="politicalAffiliation" name="politicalAffiliation" class="form-input">
-                            <option value="">Select affiliation</option>
-                            <option value="democrat">Democrat</option>
-                            <option value="republican">Republican</option>
-                            <option value="independent">Independent</option>
-                            <option value="other">Other</option>
-                            <option value="prefer-not-to-say">Prefer not to say</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="maritalStatus">Marital Status</label>
-                        <select id="maritalStatus" name="maritalStatus" class="form-input">
-                            <option value="">Select status</option>
-                            <option value="single">Single</option>
-                            <option value="married">Married</option>
-                            <option value="divorced">Divorced</option>
-                            <option value="widowed">Widowed</option>
-                            <option value="prefer-not-to-say">Prefer not to say</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="numberOfChildren">Number of Children</label>
-                        <input type="number" id="numberOfChildren" name="numberOfChildren" min="0" class="form-input">
-                    </div>
-                    
+                </div>
+
+                <div id="section-education" class="profile-section">
+                    <h2>Education History</h2>
                     <div class="education-section">
-                        <h3>Education History</h3>
-                        
                         <!-- High School -->
                         <div class="education-level">
                             <label>High School</label>
@@ -209,18 +189,84 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <button type="submit" class="save-profile-btn">Save Profile</button>
-                </form>
+                </div>
 
-                <div class="form-group emails-section">
-                    <label>Email Addresses</label>
-                    <div id="emailsList" class="emails-list">
-                        <!-- Emails will be loaded here -->
+                <div id="section-personal" class="profile-section">
+                    <h2>Personal Info</h2>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" class="form-input">
+                            <option value="">Select gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="non-binary">Non-binary</option>
+                            <option value="other">Other</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
                     </div>
-                    <div class="add-email-form">
-                        <input type="email" id="newEmail" placeholder="Add another email address">
-                        <button type="button" id="addEmailBtn" class="add-email-button">Add Email</button>
+                    <div class="form-group">
+                        <label for="politicalAffiliation">Political Affiliation</label>
+                        <select id="politicalAffiliation" name="politicalAffiliation" class="form-input">
+                            <option value="">Select affiliation</option>
+                            <option value="democrat">Democrat</option>
+                            <option value="republican">Republican</option>
+                            <option value="independent">Independent</option>
+                            <option value="other">Other</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="maritalStatus">Marital Status</label>
+                        <select id="maritalStatus" name="maritalStatus" class="form-input">
+                            <option value="">Select status</option>
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="divorced">Divorced</option>
+                            <option value="widowed">Widowed</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="numberOfChildren">Number of Children</label>
+                        <input type="number" id="numberOfChildren" name="numberOfChildren" min="0" class="form-input">
+                    </div>
+                </div>
+
+                <div id="section-finance" class="profile-section">
+                    <h2>Financial Information</h2>
+                    <div class="form-group">
+                        <label>Income Range</label>
+                        <select id="incomeRange" name="incomeRange" class="form-input">
+                            <option value="">Select income range</option>
+                            <option value="0-25000">$0 - $25,000</option>
+                            <option value="25001-50000">$25,001 - $50,000</option>
+                            <option value="50001-75000">$50,001 - $75,000</option>
+                            <option value="75001-100000">$75,001 - $100,000</option>
+                            <option value="100001-150000">$100,001 - $150,000</option>
+                            <option value="150001-200000">$150,001 - $200,000</option>
+                            <option value="200001-plus">$200,001+</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Investment Holdings</label>
+                        <div id="investmentList">
+                            <!-- Investment entries will be added here -->
+                        </div>
+                        <button type="button" id="addInvestmentBtn" class="add-button">Add Investment</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Mortgage Information</label>
+                        <div id="mortgageList">
+                            <!-- Mortgage entries will be added here -->
+                        </div>
+                        <button type="button" id="addMortgageBtn" class="add-button">Add Mortgage</button>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Ownership</label>
+                        <div id="vehicleList">
+                            <!-- Vehicle entries will be added here -->
+                        </div>
+                        <button type="button" id="addVehicleBtn" class="add-button">Add Vehicle</button>
                     </div>
                 </div>
             </div>
@@ -261,8 +307,8 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <button onclick="connectFacebook()" class="connect-button facebook">
-                                            <img src="../assets/integrations/signin_with_facebook.png" alt="Sign in with Facebook">
+                                        <button class="integration-button" onclick="checkLoginState()">
+                                            <img src="../assets/integrations/facebook_login.png" alt="Connect with Facebook">
                                             Connect with Facebook
                                         </button>
                                     </td>
@@ -314,5 +360,6 @@
         </div>
     </div>
     <script src="account.js"></script>
+    <script src="/js/facebook.js"></script>
 </body>
 </html>

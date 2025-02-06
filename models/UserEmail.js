@@ -41,8 +41,12 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: false
     },
     verificationToken: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    verificationCode: {
+      type: DataTypes.STRING(6),
+      allowNull: true
     },
     verificationExpires: {
       type: DataTypes.DATE,

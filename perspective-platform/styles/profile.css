@@ -1,0 +1,40 @@
+.profile-tab {
+    display: flex;
+    gap: 2rem;
+    min-height: 400px;
+}
+
+.profile-sidebar {
+    width: 200px;
+    padding: 1rem;
+    border-right: 1px solid #eee;
+    background: #f8f9fa;
+    position: fixed;
+    top: 100px;
+    left: 0;
+    height: calc(100vh - 100px);
+}
+
+.sidebar-item {
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sidebar-item:hover {
+    background: #e9ecef;
+}
+
+.sidebar-item.active {
+    background: #007bff;
+    color: white;
+}
+
+.profile-section {
+    margin-left: 220px;
+    padding: 1rem;
+}
+
+/* ... rest of the CSS I provided earlier ... */ 
