@@ -7,7 +7,7 @@
     "@mermaid-js/mermaid-cli": "latest",
     "@mui/icons-material": "^5.16.7",
     "@mui/material": "^5.16.7",
-    "axios": "^1.6.2",
+    "axios": "^1.13.5",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cheerio": "^1.0.0-rc.12",
